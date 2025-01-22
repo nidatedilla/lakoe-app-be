@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model roles {
+  id     String @id @unique @default(cuid())
+  name String
+  userId String @unique
+
+  user users @relation(fields: [userId], references: [id])
+}
+
+model users {
+  id         String       @id @unique @default(cuid())
+  name       String
+  email      String       @unique
+  phone      Int          @unique
+  password   String
+  role_id    roles?
+  profile_id profiles?
+  carts      carts[]
+  cart_items cart_items[]
+}
+
+model profiles {
+  id        String @id @unique @default(cuid())
+  locations String
+  image     String
+  usersId   String @unique
+
+  user_id users @relation(fields: [usersId], references: [id])
+}
+
+model carts {
+  id         String       @id @unique @default(cuid())
+  prices     Int
+  user_id    users        @relation(fields: [usersId], references: [id])
+  discount   Decimal?
+  usersId    String
+  cart_items cart_items[]
+}
+
+model cart_items {
+  id    String @id @unique @default(cuid())
+  qty   Int
+  price Int
+
+  cartsId  String
+  usersId  String
+  storesId String
+  chart_id carts  @relation(fields: [cartsId], references: [id])
+  user_id  users  @relation(fields: [usersId], references: [id])
+  store_id stores @relation(fields: [storesId], references: [id])
+}
+
+model stores {
+  id              String            @id @unique @default(cuid())
+  name            String
+  banner          String?
+  logo            String?
+  description     String
+  cart_items      cart_items[]
+  products        products[]
+  bank_accounts   bank_accounts[]
+  operation_hours operation_hours[]
+}
+
+model products {
+  id            String       @id @unique @default(cuid())
+  name          String
+  description   String
+  store_id      stores       @relation(fields: [storesId], references: [id])
+  minimum_order Int
+  variatns      String
+  size          Int
+  storesId      String
+  categories    categories[]
+  variants      variants[]
+}
+
+model categories {
+  id         String   @id @unique @default(cuid())
+  name       String
+  productsId String
+  product_id products @relation(fields: [productsId], references: [id])
+}
+
+model variants {
+  id              String            @id @unique @default(cuid())
+  name            String
+  product_id      products          @relation(fields: [productsId], references: [id])
+  productsId      String
+  variant_options variant_options[]
+}
+
+model variant_options {
+  id         String   @id @unique @default(cuid())
+  name       String
+  variant_id variants @relation(fields: [variantsId], references: [id])
+  variantsId String
+}
+
+model bank_accounts {
+  id       String @id @unique @default(cuid())
+  bank     String
+  acc_num  Int
+  acc_name String
+  store_id stores @relation(fields: [storesId], references: [id])
+  storesId String
+}
+
+model operation_hours {
+  id       String   @id @unique @default(cuid())
+  day      DateTime
+  open_at  DateTime
+  close_at DateTime
+  is_off   Boolean
+  store_id stores   @relation(fields: [storesId], references: [id])
+  storesId String
+}
