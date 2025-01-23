@@ -17,6 +17,13 @@ export const registerUser = async (user: users) => {
 
   user.password = await bcrypt.hash(user.password, 10);
 
+  const existedPhoneNum = await userRepository.findUniqueUserByPhoneNumberRepository(user.phone)
+
+  if (existedPhoneNum) {
+    throw new Error('phone number already used');
+  }
+  console.log('Existed phone number:', existedPhoneNum);
+
   const registeredUser = await userRepository.registerUserRepository(user);
 
   console.log(registeredUser);
@@ -29,13 +36,13 @@ export const loginUser = async (LoginDTO: LoginSchema) => {
 
   const user = await userRepository.findUniqueUserByEmailRepository(email);
   if (!user) {
-    throw new Error('Email or password is incorrect');
+    throw new Error('Email is incorrect');
   }
 
   const isMatch = await bcrypt.compare(password, user.password)
 
   if(!isMatch){
-    throw new Error('Email or password is incorrect');
+    throw new Error('password is incorrect');
   }
 
   const token = jwt.sign(
@@ -45,9 +52,10 @@ export const loginUser = async (LoginDTO: LoginSchema) => {
 
   return {
     token,
-  user:{
+    user:{
     id: user.id,
     name: user.name,
-    email: user.email
+    email: user.email,
+    role: user.role,
   }}
 };
