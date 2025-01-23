@@ -28,3 +28,4 @@ export const auth = async (
         res.status(401).json({ message: "Unauthorized: Invalid token" });
         return;
       }
+    }
