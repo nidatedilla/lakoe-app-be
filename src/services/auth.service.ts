@@ -36,8 +36,8 @@ export const loginUser = async (LoginDTO: LoginSchema) => {
 
   const user = await userRepository.findUniqueUserByEmailRepository(email);
   if (!user) {
-    throw new Error('Email is incorrect');
-  }
+    throw new Error('Email or password is incorrect');
+  };
 
   const isMatch = await bcrypt.compare(password, user.password)
 

@@ -19,7 +19,6 @@ export const auth = async (
         res.status(401).json({ message: "Unauthorized: Token missing" });
         return;
       }
-
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         res.locals.user = decoded;
@@ -29,4 +28,3 @@ export const auth = async (
         res.status(401).json({ message: "Unauthorized: Invalid token" });
         return;
       }
-};
