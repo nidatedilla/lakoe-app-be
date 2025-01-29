@@ -1,16 +1,6 @@
 import { stores } from "@prisma/client";
 import prisma from "../utils/prisma";
 
-export const createStoreRepository = async (store: stores) => {
-  return await prisma.stores.create({
-    data: {
-      name: store.name,
-      description: store.description,
-      banner: store.banner,
-      userId: store.userId,
-    },
-  });
-}
 
 export const getStoreRepository = async () => {
   return await prisma.stores.findMany({
@@ -20,9 +10,9 @@ export const getStoreRepository = async () => {
   });
 };
 
-export const findUniqueStoreRepository = async (id: string) => {
+export const findUniqueStoreRepository = async (userId: string) => {
   return await prisma.stores.findUnique({
-    where: { id },
+    where: { userId },
   });
 };
 
@@ -34,7 +24,7 @@ export const updateStoreRepository = async (id: string, store: stores) => {
       description: store.description,
       banner: store.banner,
       userId: store.userId,
-    },
+    },  
   });
 }
 
@@ -42,4 +32,18 @@ export const deleteStoreRepository = async (id: string) => {
   return await prisma.stores.delete({where: {
     id
   }})
+}
+
+export const uniqueStoreByName = async (name: string) => { 
+  return await prisma.stores.findUnique({
+    where: {
+      name
+    }
+  })
+}
+
+export const findUniqueStoreByIdRepository = async (id: string) => {
+  return await prisma.stores.findUnique({
+    where: { id },
+  });
 }
