@@ -31,6 +31,33 @@ export const registerUser = async (user: users) => {
   return registeredUser;
 };
 
+export const registerAdmin = async (user: users) => {
+  console.log('Registering admin:', user);
+  const existedEmail = await userRepository.findUniqueUserByEmailRepository(
+    user.email,
+  );
+
+  if (existedEmail) {
+    throw new Error('Email already used');
+  }
+  console.log('Existed email:', existedEmail);
+
+  user.password = await bcrypt.hash(user.password, 10);
+
+  const existedPhoneNum = await userRepository.findUniqueUserByPhoneNumberRepository(user.phone)
+
+  if (existedPhoneNum) {
+    throw new Error('phone number already used');
+  }
+  console.log('Existed phone number:', existedPhoneNum);
+
+  const registeredUser = await userRepository.registerAdminRepository(user);
+
+  console.log(registeredUser);
+
+  return registeredUser;
+}
+
 export const loginUser = async (LoginDTO: LoginSchema) => {
   const { email, password } = LoginDTO;
 

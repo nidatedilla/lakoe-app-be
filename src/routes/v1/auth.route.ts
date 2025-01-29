@@ -9,6 +9,8 @@ authRouter.post("/register", authController.register)
 
 authRouter.post("/login", authController.login)
 
+authRouter.post("/register/admin", authController.registerAdmin)
+
 authRouter.get("/me",auth, authController.getMeCOntroller)
 
 export default authRouter

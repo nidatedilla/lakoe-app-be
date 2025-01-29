@@ -1,14 +1,26 @@
 import { Request, Response } from 'express';
 import * as authServices from '../services/auth.service';
-import {getMeRepository} from '../repositories/user.repository';
+import { getMeRepository } from '../repositories/user.repository';
 
 export const register = async (req: Request, res: Response) => {
   try {
     const { body } = req;
     const user = await authServices.registerUser(body);
 
-    res.status(201).json(
-      user);
+    res.status(201).json(user);
+  } catch (error: any) {
+    console.log((error as Error).message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const registerAdmin = async (req: Request, res: Response) => {
+  try {
+    const { body } = req;
+
+    const admin = await authServices.registerAdmin(body);
+
+    res.status(201).json(admin);
   } catch (error: any) {
     console.log((error as Error).message);
     res.status(500).json({ message: error.message });
@@ -23,9 +35,7 @@ export const login = async (req: Request, res: Response) => {
 
     console.log('user id: ', user.user.id);
 
-    res.json(
-      user,
-    );
+    res.json(user);
   } catch (error: any) {
     console.log((error as Error).message);
     res.status(500).json({ message: error.message });
@@ -33,19 +43,16 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const getMeCOntroller = async (req: Request, res: Response) => {
-  const user = res.locals.user
+  const user = res.locals.user;
 
-  if(!user){
-    res.status(401).json({message: "Unauthorized"})
-    return
+  if (!user) {
+    res.status(401).json({ message: 'Unauthorized' });
+    return;
   }
 
   try {
-    
-    const me = await getMeRepository(user.id)
+    const me = await getMeRepository(user.id);
 
-    res.status(200).json(me)
-  } catch (error) {
-    
-  }
-}
+    res.status(200).json(me);
+  } catch (error) {}
+};
