@@ -25,7 +25,7 @@ model users {
   id         String       @id @unique @default(cuid())
   name       String
   email      String       @unique
-  phone      String          @unique
+  phone      String       @unique
   password   String
   role       String?
   profile    profiles?
@@ -99,6 +99,9 @@ model products {
   is_active     Boolean?            @default(true)
   size          Int
   minimum_order Int
+  price         Int
+  sku           String?
+  stock         Int
   store         stores              @relation(fields: [storeId], references: [id])
   storeId       String
   categories    productCategories[]
