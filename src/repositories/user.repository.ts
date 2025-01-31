@@ -31,16 +31,16 @@ export const updateStoreSellerRepository = async (user: userStore) => {
           create: {
             name: user.stores?.name || '',
             description: user.stores?.description || '',
-            banner: user.stores?.banner || '',
-            logo: user.stores?.logo || '',
-            slogan: user.stores?.slogan || '',
+            banner: user.stores?.banner,
+            logo: user.stores?.logo,
+            slogan: user.stores?.slogan
           }, 
           update: {
             name: user.stores?.name || '',
             description: user.stores?.description || '',
-            banner: user.stores?.banner || '',
-            logo: user.stores?.logo || '',
-            slogan: user.stores?.slogan || '',
+            banner: user.stores?.banner,
+            logo: user.stores?.logo,
+            slogan: user.stores?.slogan,
           },
         },
       },
@@ -97,6 +97,14 @@ export const findUniqueUserByIdRepository = async (id: string) => {
     where: { id },
   });
 }
+export const getUniqueUserByIdRepository = async (id: string) => {
+  return await prisma.users.findUnique({
+    where: { id },
+    include: {
+      stores: true,
+    }
+  });
+}
 
 export const getMeRepository = async (id: string) => {
   return await prisma.users.findUnique({
@@ -108,7 +116,25 @@ export const getMeRepository = async (id: string) => {
       name: true,
       phone: true,
       profile: true,
-      stores: true,
+      stores: {
+        select: {
+          banner: true,
+          name: true,
+          id:true,
+          logo: true,
+          description: true,
+          domain: true,
+          slogan: true,
+          userId: true,
+          products: true,
+          _count: {
+            select: {
+              products: true
+            }
+          }
+        },
+        
+      },
     },
   });
 };
