@@ -5,7 +5,7 @@
  * /api/auth/register:
  *   post:
  *     summary: add new user
- *     tags: [Auhth]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -36,7 +36,7 @@
  * /api/auth/login:
  *   post:
  *     summary: login user
- *     tags: [Auhth]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
