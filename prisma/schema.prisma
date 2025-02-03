@@ -1,0 +1,266 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model profiles {
+  id        String      @id @unique @default(cuid())
+  image     String?
+  user      users       @relation(fields: [userId], references: [id])
+  userId    String      @unique
+  locations locations[]
+}
+
+model users {
+  id         String       @id @unique @default(cuid())
+  name       String
+  email      String       @unique
+  phone      String       @unique
+  password   String
+  role       String?
+  profile    profiles?
+  cart       carts?
+  stores     stores?
+  cart_items cart_items[]
+  invoices   invoices[]
+  payments   payments[]
+}
+
+model carts {
+  id         String       @id @unique @default(cuid())
+  prices     Int
+  user       users        @relation(fields: [userId], references: [id])
+  userId     String       @unique
+  discount   Decimal?
+  store      stores       @relation(fields: [storeId], references: [id])
+  storeId    String
+  cart_items cart_items[]
+  invoice    invoices?
+}
+
+model cart_items {
+  id                   String                 @id @unique @default(cuid())
+  qty                  Int
+  price                Int
+  cart                 carts                  @relation(fields: [cartId], references: [id])
+  cartId               String
+  user                 users                  @relation(fields: [userId], references: [id])
+  userId               String
+  store                stores                 @relation(fields: [storeId], references: [id])
+  storeId              String
+  variant_option_value variant_option_values? @relation(fields: [variantOptionValueId], references: [id])
+  variantOptionValueId String?
+}
+
+model stores {
+  id                    String                  @id @unique @default(cuid())
+  name                  String                  @unique
+  banner                String?
+  logo                  String?
+  description           String
+  domain                String?
+  slogan                String?
+  userId                String                  @unique
+  user                  users                   @relation(fields: [userId], references: [id])
+  bank_accounts         bank_accounts[]
+  products              products[]
+  carts                 carts[]
+  cart_items            cart_items[]
+  operation_hours       operation_hours[]
+  message_templates     message_templates[]
+  locations             locations[]
+  stores_in_decorations stores_in_decorations[]
+}
+
+model bank_accounts {
+  id       String @id @unique @default(cuid())
+  bank     String
+  acc_num  Int
+  acc_name String
+  store    stores @relation(fields: [storeId], references: [id])
+  storeId  String
+}
+
+model products {
+  id            String              @id @unique @default(cuid())
+  name          String
+  description   String
+  attachments   String?
+  is_active     Boolean?            @default(true)
+  size          Int
+  minimum_order Int
+  price         Int
+  sku           String?
+  stock         Int
+  store         stores              @relation(fields: [storeId], references: [id])
+  storeId       String
+  categories    productCategories[]
+  variants      variants[]
+  categoryId    String?
+}
+
+model categories {
+  id       String              @id @unique @default(cuid())
+  name     String
+  parentId String?
+  parent   categories?         @relation("CategoryParent", fields: [parentId], references: [id])
+  children categories[]        @relation("CategoryParent")
+  products productCategories[]
+}
+
+model productCategories {
+  id         String     @id @unique @default(cuid())
+  product    products   @relation(fields: [productId], references: [id])
+  productId  String
+  category   categories @relation(fields: [categoryId], references: [id])
+  categoryId String
+}
+
+model variants {
+  id              String            @id @unique @default(cuid())
+  name            String
+  product         products          @relation(fields: [productId], references: [id])
+  productId       String
+  is_active       Boolean?
+  variant_options variant_options[]
+}
+
+model variant_options {
+  id                    String                  @id @unique @default(cuid())
+  name                  String
+  variant               variants                @relation(fields: [variantId], references: [id])
+  variantId             String
+  variant_option_values variant_option_values[]
+}
+
+model variant_option_values {
+  id              String           @id @unique @default(cuid())
+  variant_option  variant_options? @relation(fields: [variantOptionId], references: [id])
+  variantOptionId String?
+  sku             String?
+  weight          Int?
+  stock           Int?
+  price           Int
+  is_active       Boolean
+  cart_items      cart_items[]
+}
+
+model confirmation_payment {
+  id        String   @id @unique @default(cuid())
+  amount    Int
+  bank      String
+  invoice   invoices @relation(fields: [invoiceId], references: [id])
+  invoiceId String
+}
+
+model invoice_histories {
+  id         String    @id @unique @default(cuid())
+  status     String?
+  invoice    invoices? @relation(fields: [invoiceId], references: [id])
+  invoiceId  String?
+  created_at DateTime? @default(now())
+}
+
+model invoices {
+  id                   String                 @id @unique
+  prices               Int
+  service_charge       Int?
+  status               String
+  reciver_longitude    Decimal?
+  receiver_latitude    Decimal?
+  receiver_district    String?
+  receiver_phone       Int?
+  receiver_address     String?
+  receiver_name        String?
+  invoice_number       String?
+  cart                 carts?                 @relation(fields: [cartId], references: [id])
+  cartId               String?                @unique
+  payment              payments?
+  paymentId            String                 @unique
+  courier              couriers               @relation(fields: [courierId], references: [id])
+  courierId            String                 @unique
+  user                 users                  @relation(fields: [userId], references: [id])
+  userId               String
+  confirmation_payment confirmation_payment[]
+  invoice_histories    invoice_histories[]
+}
+
+model payments {
+  id                   String    @id @unique @default(cuid())
+  bank                 String
+  amount               Int?
+  status               String?
+  invoice              invoices? @relation(fields: [invoiceId], references: [id])
+  invoiceId            String?   @unique
+  user                 users?    @relation(fields: [userId], references: [id])
+  userId               String?
+  moota_transaction_id String?
+}
+
+model couriers {
+  id                   String    @id @unique @default(cuid())
+  courier_code         String
+  courier_service_name String
+  courier_service_code String
+  price                String
+  invoice              invoices?
+  invoiceId            String?
+  order_id             String    @unique
+}
+
+model operation_hours {
+  id       String   @id @unique @default(cuid())
+  day      DateTime
+  open_at  DateTime
+  close_at DateTime
+  id_off   Boolean
+  store    stores   @relation(fields: [storeId], references: [id])
+  storeId  String
+}
+
+model stores_in_decorations {
+  id           String      @id @unique @default(cuid())
+  decoration   decoration? @relation(fields: [decorationId], references: [id])
+  decorationId String?
+  store        stores?     @relation(fields: [storeId], references: [id])
+  storeId      String?
+}
+
+model decoration {
+  id                    String                  @id @unique @default(cuid())
+  type                  String?
+  stores_in_decorations stores_in_decorations[]
+}
+
+model message_templates {
+  id      String  @id @unique @default(cuid())
+  name    String?
+  content String?
+  store   stores? @relation(fields: [storeId], references: [id])
+  storeId String?
+}
+
+model locations {
+  id               String    @id @unique @default(cuid())
+  name             String?
+  address          String?
+  postal_code      String?
+  city_district    String?
+  latitude         Decimal?
+  longitude        Decimal?
+  store            stores?   @relation(fields: [storeId], references: [id])
+  storeId          String?
+  profile          profiles? @relation(fields: [profileId], references: [id])
+  profileId        String?
+  is_main_location Boolean?
+}
