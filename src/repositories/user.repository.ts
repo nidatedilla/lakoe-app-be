@@ -33,8 +33,8 @@ export const updateStoreSellerRepository = async (user: userStore) => {
             description: user.stores?.description || '',
             banner: user.stores?.banner,
             logo: user.stores?.logo,
-            slogan: user.stores?.slogan
-          }, 
+            slogan: user.stores?.slogan,
+          },
           update: {
             name: user.stores?.name || '',
             description: user.stores?.description || '',
@@ -47,7 +47,7 @@ export const updateStoreSellerRepository = async (user: userStore) => {
     },
     include: {
       stores: true,
-    }
+    },
   });
 };
 
@@ -76,10 +76,15 @@ export const updateUserRepository = async (user: users) => {
 };
 
 export const findUniqueUserByEmailRepository = async (email: string) => {
+  if (!email) {
+    throw new Error('Email is required');
+  }
+
   return await prisma.users.findUnique({
     where: { email },
   });
 };
+
 export const findUniqueUserByPhoneNumberRepository = async (phone: string) => {
   return await prisma.users.findUnique({
     where: { phone },
@@ -96,15 +101,15 @@ export const findUniqueUserByIdRepository = async (id: string) => {
   return await prisma.users.findUnique({
     where: { id },
   });
-}
+};
 export const getUniqueUserByIdRepository = async (id: string) => {
   return await prisma.users.findUnique({
     where: { id },
     include: {
       stores: true,
-    }
+    },
   });
-}
+};
 
 export const getMeRepository = async (id: string) => {
   return await prisma.users.findUnique({
@@ -120,7 +125,7 @@ export const getMeRepository = async (id: string) => {
         select: {
           banner: true,
           name: true,
-          id:true,
+          id: true,
           logo: true,
           description: true,
           domain: true,
@@ -129,11 +134,10 @@ export const getMeRepository = async (id: string) => {
           products: true,
           _count: {
             select: {
-              products: true
-            }
-          }
+              products: true,
+            },
+          },
         },
-        
       },
     },
   });
