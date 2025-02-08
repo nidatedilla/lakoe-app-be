@@ -31,16 +31,19 @@ export const createProductController = async (req: Request, res: Response) => {
   const userId = res.locals.user.id;
 
   try {
-    const {
+    let {
       name,
       description,
       size,
       minimum_order,
+      url,
+      stock,
+      price,
+      weight,
       attachments,
       categoryId,
-      stock,
       sku,
-      price,
+      variant,
     } = req.body;
 
     const file = req.file as Express.Multer.File;
@@ -58,18 +61,46 @@ export const createProductController = async (req: Request, res: Response) => {
     }
 
     const storeId = findUniqueUserById.stores?.id || '';
+
+    // Parsing data variant yang dikirim dari frontend (bisa berupa string JSON)
+    let variantData: any[] = [];
+    if (variant) {
+      if (typeof variant === 'string') {
+        variantData = JSON.parse(variant);
+      } else {
+        variantData = variant;
+      }
+    }
+
+    // Pastikan data varian hanya memiliki field yang didefinisikan di model variants.
+    // Misalnya, jika ada properti "name", kita hapus atau abaikan.
+    const transformedVariantData = variantData.map((v) => ({
+      combination: v.combination, // Harus berupa objek atau JSON
+      price: parseInt(v.price, 10),
+      sku: v.sku,
+      stock: parseInt(v.stock, 10),
+      weight: parseInt(v.weight, 10),
+      photo: v.photo,
+    }));
+
+    // Buat object product
     const product = {
       name,
       description,
+      url,
       size: parseInt(size, 10),
       minimum_order: parseInt(minimum_order, 10),
       attachments,
       storeId,
       sku,
+      weight: parseInt(weight, 10),
       is_active: true,
       categoryId: categoryId || null,
       stock: parseInt(stock, 10),
       price: parseInt(price, 10),
+      variant: {
+        create: transformedVariantData,
+      },
     };
 
     const newProduct = await productService.createProductService(
@@ -91,10 +122,12 @@ export const updateProductController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const {
+    let {
       name,
       description,
       size,
+      url,
+      weight,
       minimum_order,
       attachments,
       storeId,
@@ -109,6 +142,8 @@ export const updateProductController = async (req: Request, res: Response) => {
       name,
       description,
       size,
+      url,
+      weight,
       minimum_order,
       attachments,
       storeId,
@@ -133,7 +168,6 @@ export const updateProductController = async (req: Request, res: Response) => {
   }
 };
 
-
 export const deleteProductController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -150,10 +184,15 @@ export const deleteProductController = async (req: Request, res: Response) => {
     });
   }
 };
-export const getProductsByIsActiveController = async (req: Request, res: Response) => {
+export const getProductsByIsActiveController = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const { isActive } = req.params;
-    const products = await productService.getProductsByIsActiveService(isActive === 'true');
+    const products = await productService.getProductsByIsActiveService(
+      isActive === 'true',
+    );
     res.status(200).json(products);
   } catch (error) {
     console.log(error);
