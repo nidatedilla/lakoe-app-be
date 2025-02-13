@@ -27,10 +27,8 @@ export const createProductRepository = async (
   return await prisma.products.create({
     data: {
       ...product,
-      // Jika product.size bernilai null, ganti dengan undefined
       size: product.size ?? undefined,
-
-      // Jika categoryId tidak null atau undefined, hubungkan ke kategori
+      // buat yang lain
       ...(categoryId && {
         categories: {
           create: {
@@ -73,5 +71,11 @@ export const findProductsByIsActive = async (isActive: boolean) => {
       stores: true,
       categories: true,
     },
+  });
+};
+
+export const findProductByName = async (name: string) => {
+  return await prisma.products.findMany({
+    where: { name: { contains: name, mode: 'insensitive' } },
   });
 };

@@ -62,18 +62,28 @@ export const createProductController = async (req: Request, res: Response) => {
 
     const storeId = findUniqueUserById.stores?.id || '';
 
-    // Pastikan variant yang dikirim memiliki format yang sesuai
+    // Parsing data variant yang dikirim dari frontend (bisa berupa string JSON)
     let variantData: any[] = [];
     if (variant) {
       if (typeof variant === 'string') {
-        // Jika variant dikirim sebagai string JSON, parsing terlebih dahulu
         variantData = JSON.parse(variant);
       } else {
         variantData = variant;
       }
     }
 
-    // Buat object product yang akan dikirim ke service
+    // Pastikan data varian hanya memiliki field yang didefinisikan di model variants.
+    // Misalnya, jika ada properti "name", kita hapus atau abaikan.
+    const transformedVariantData = variantData.map((v) => ({
+      combination: v.combination, // Harus berupa objek atau JSON
+      price: parseInt(v.price, 10),
+      sku: v.sku,
+      stock: parseInt(v.stock, 10),
+      weight: parseInt(v.weight, 10),
+      photo: v.photo,
+    }));
+
+    // Buat object product
     const product = {
       name,
       description,
@@ -88,9 +98,8 @@ export const createProductController = async (req: Request, res: Response) => {
       categoryId: categoryId || null,
       stock: parseInt(stock, 10),
       price: parseInt(price, 10),
-      // Menggunakan nested create untuk relasi variant
       variant: {
-        create: variantData,
+        create: transformedVariantData,
       },
     };
 

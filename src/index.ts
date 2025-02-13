@@ -18,6 +18,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/v1', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
 app.use('/api', router);
 
 app.listen(port, () => {
