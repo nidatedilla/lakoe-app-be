@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 export const findAllProductRepository = async () => {
   return await prisma.products.findMany({
     include: {
-      store: true,
+      stores: true,
       categories: true,
     },
   });
@@ -68,11 +68,12 @@ export const findProductsByIsActive = async (isActive: boolean) => {
   return await prisma.products.findMany({
     where: { is_active: isActive },
     include: {
-      store: true,
+      stores: true,
       categories: true,
     },
   });
 };
+
 export const findProductByName = async (name: string) => {
   return await prisma.products.findMany({
     where: { name: { contains: name, mode: 'insensitive' } },

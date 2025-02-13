@@ -68,7 +68,7 @@ model stores {
   banner                String?
   logo                  String?
   description           String
-  domain                String?
+  domain                String?                 @unique
   slogan                String?
   userId                String                  @unique
   user                  users                   @relation(fields: [userId], references: [id])
@@ -268,19 +268,24 @@ model payments {
 }
 
 model couriers {
-  id                   String    @id @unique @default(cuid())
-  courier_company      String
-  courier_service_name String
-  courier_type         String
-  price                String
-  courier_insurance    Int?
-  delivery_type        String
-  delivery_date        String?
-  delivery_time        String?
-  invoice              invoices?
-  invoiceId            String?
-  order_id             String    @unique
-  orders               orders[]
+  id                               String    @id @unique @default(cuid())
+  available_collection_method      String[]
+  available_for_cash_on_delivery   Boolean
+  available_for_proof_of_delivery  Boolean
+  available_for_instant_waybill_id Boolean
+  courier_name                     String
+  courier_code                     String
+  courier_service_name             String
+  courier_service_code             String
+  tier                             String
+  description                      String
+  service_type                     String
+  shipping_type                    String
+  shipment_duration_range          String
+  shipment_duration_unit           String
+  orders                           orders[]
+  invoices                         invoices?
+  is_selected                      Boolean   @default(false)
 }
 
 model operation_hours {

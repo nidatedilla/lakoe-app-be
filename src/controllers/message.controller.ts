@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma';
+import querystring from 'querystring';
 
 export async function createMessageTemplate(req: Request, res: Response) {
   const { title, content } = req.body;
@@ -37,9 +36,20 @@ export async function createMessageTemplate(req: Request, res: Response) {
 }
 
 export async function sendMessage(req: Request, res: Response) {
-  const { templateId, buyerId, productId } = req.body;
-
   try {
+    const { templateId, buyerName, buyerPhone, productName, storeName } =
+      req.body;
+
+    if (
+      !templateId ||
+      !buyerName ||
+      !buyerPhone ||
+      !productName ||
+      !storeName
+    ) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
     const template = await prisma.message_templates.findUnique({
       where: { id: templateId },
     });
@@ -49,36 +59,27 @@ export async function sendMessage(req: Request, res: Response) {
        return
     }
 
-    const buyer = await prisma.users.findUnique({ where: { id: buyerId } });
-
-    const product = await prisma.products.findUnique({
-      where: { id: productId },
-    });
-    if (!buyer || !product) {
-       res.status(404).json({ message: 'Buyer or product not found' });
-       return
+    if (!template.content) {
+      return res.status(400).json({ message: 'Template content is missing' });
     }
     
 
-    const store = await prisma.stores.findUnique({
-      where: { id: product.storeId },
-    });
+    let messageContent = template.content
+      .replace('[Nama Pembeli]', buyerName)
+      .replace('[Nama Produk]', productName)
+      .replace('[Nama Toko]', storeName);
 
-    let messageContent = template.content || '';
-    messageContent = messageContent.replace('[Nama Pembeli]', buyer.name);
-    messageContent = messageContent.replace('[Nama Produk]', product.name);
-    messageContent = messageContent.replace(
-      '[Nama Toko]',
-      store?.name || 'Toko',
-    );
+    const encodedMessage = querystring.stringify({ text: messageContent });
+    const waLink = `https://wa.me/${buyerPhone}?${encodedMessage}`;
 
      res.status(200).json({
       message: 'Message generated successfully',
       generatedMessage: messageContent,
+      waLink,
     });
     return
   } catch (error) {
-    res.status(500).json({ message: 'Error generating message', error });
+    return res.status(500).json({ message: 'Error generating message', error });
   }
 }
 

@@ -1,12 +1,11 @@
-import { stores } from "@prisma/client";
-import prisma from "../utils/prisma";
-
+import { stores } from '@prisma/client';
+import prisma from '../utils/prisma';
 
 export const getStoreRepository = async () => {
   return await prisma.stores.findMany({
     include: {
-        user: true
-    }
+      user: true,
+    },
   });
 };
 
@@ -24,23 +23,25 @@ export const updateStoreRepository = async (id: string, store: stores) => {
       description: store.description,
       banner: store.banner,
       userId: store.userId,
-    },  
+    },
   });
-}
+};
 
 export const deleteStoreRepository = async (id: string) => {
-  return await prisma.stores.delete({where: {
-    id
-  }})
-}
+  return await prisma.stores.delete({
+    where: {
+      id,
+    },
+  });
+};
 
-export const uniqueStoreByName = async (name: string) => { 
+export const uniqueStoreByName = async (name: string) => {
   return await prisma.stores.findUnique({
     where: {
-      name
-    }
-  })
-}
+      name,
+    },
+  });
+};
 
 export const findUniqueStoreByIdRepository = async (id: string) => {
   return await prisma.stores.findUnique({
@@ -58,4 +59,11 @@ export const findUniqueStoreLocationRepository = async (id: string) => {
       locations: true
     }
   });
-}
+};
+
+export const getStoreByDomain = async (domain: string) => {
+  return await prisma.stores.findUnique({
+    where: { domain },
+    include: { products: true },
+  });
+};

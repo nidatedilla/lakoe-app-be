@@ -13,6 +13,10 @@ const port = process.env.PORT;
 app.use(express.json());
 app.use(cors());
 
+app.get('/', (req, res) => {
+  res.send('Hello World :D');
+});
+
 app.use('/v1', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 app.use('/api', router);

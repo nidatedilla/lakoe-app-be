@@ -2,7 +2,6 @@ import * as storeService from '../services/store.service';
 import { Request, Response } from 'express';
 import { findUniqueStoreRepository } from '../repositories/store.repository';
 
-
 export const getStoreController = async (req: Request, res: Response) => {
   try {
     const store = await storeService.getStoreService();
@@ -13,7 +12,10 @@ export const getStoreController = async (req: Request, res: Response) => {
   }
 };
 
-export const findUniqueStoreController = async (req: Request, res: Response) => {
+export const findUniqueStoreController = async (
+  req: Request,
+  res: Response,
+) => {
   const { id } = req.params;
   try {
     const store = await storeService.findUniqueStoreService(id);
@@ -53,15 +55,27 @@ export const deleteStoreController = async (req: Request, res: Response) => {
     }
 
     if (findStoreId.userId !== userId) {
-      res.status(403).json({ message: 'Forbidden: You do not have permission to delete this store' });
+      res.status(403).json({
+        message: 'Forbidden: You do not have permission to delete this store',
+      });
       return;
     }
 
     const deleteStore = await storeService.deleteStoreService(findStoreId.id);
-    
-    res.status(200).json({ message: "Store deleted", deleteStore });
+
+    res.status(200).json({ message: 'Store deleted', deleteStore });
   } catch (error: any) {
     console.log((error as Error).message);
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const getStoreWithProducts = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+    const storeData = await storeService.fetchStoreWithProducts(domain);
+    res.json(storeData);
+  } catch (error: any) {
+    res.status(404).json({ message: error.message });
   }
 };
