@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 export const findAllProductRepository = async () => {
   return await prisma.products.findMany({
     include: {
-      stores: true,
+      store: true,
       categories: true,
     },
   });
@@ -27,10 +27,8 @@ export const createProductRepository = async (
   return await prisma.products.create({
     data: {
       ...product,
-      // Jika product.size bernilai null, ganti dengan undefined
       size: product.size ?? undefined,
-
-      // Jika categoryId tidak null atau undefined, hubungkan ke kategori
+      // buat yang lain
       ...(categoryId && {
         categories: {
           create: {
@@ -70,8 +68,13 @@ export const findProductsByIsActive = async (isActive: boolean) => {
   return await prisma.products.findMany({
     where: { is_active: isActive },
     include: {
-      stores: true,
+      store: true,
       categories: true,
     },
+  });
+};
+export const findProductByName = async (name: string) => {
+  return await prisma.products.findMany({
+    where: { name: { contains: name, mode: 'insensitive' } },
   });
 };

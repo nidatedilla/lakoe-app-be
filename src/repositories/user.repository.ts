@@ -132,6 +132,7 @@ export const getMeRepository = async (id: string) => {
           slogan: true,
           userId: true,
           products: true,
+          locations: true,
           _count: {
             select: {
               products: true,

@@ -7,6 +7,9 @@ import storeRouter from './store.route';
 import categoryRouter from './category.route';
 import aiRouter from './ai.route';
 import messageRouter from './message.route';
+import locationRouter from './location.route';
+import regionRouter from './region.route';
+
 
 const router = Router();
 
@@ -16,6 +19,8 @@ router.use('/product', auth, productRouter);
 router.use('/store', auth, storeRouter);
 router.use('/category', auth, categoryRouter);
 router.use('/message-templates', auth, messageRouter);
+router.use('/location', auth, locationRouter);
 router.use('/ai', aiRouter);
+router.use('/wilayah', regionRouter);
 
 export default router;
