@@ -6,17 +6,17 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
     console.log('Webhook received:', req.body);
 
     if (!req.body || Object.keys(req.body).length === 0) {
-      return res
+      res
         .status(200)
         .json({ success: true, message: 'Webhook installed successfully' });
+      return;
     }
 
     const { order_id, status } = req.body;
 
     if (!order_id || !status) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid payload' });
+      res.status(400).json({ success: false, message: 'Invalid payload' });
+      return;
     }
 
     const order = await prisma.orders.findFirst({
@@ -25,9 +25,8 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
 
     if (!order) {
       console.warn('Order not found:', order_id);
-      return res
-        .status(200)
-        .json({ success: false, message: 'Order not found' });
+      res.status(200).json({ success: false, message: 'Order not found' });
+      return;
     }
 
     await prisma.orders.update({
