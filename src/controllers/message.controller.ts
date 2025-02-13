@@ -8,11 +8,13 @@ export async function createMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-    return res.status(401).json({ message: 'User not authenticated' });
+     res.status(401).json({ message: 'User not authenticated' });
+     return
   }
 
   if (!title || !content) {
-    return res.status(400).json({ message: 'Title and content are required' });
+     res.status(400).json({ message: 'Title and content are required' });
+     return
   }
 
   try {
@@ -24,10 +26,11 @@ export async function createMessageTemplate(req: Request, res: Response) {
       },
     });
 
-    return res.status(201).json({
+     res.status(201).json({
       message: 'Message template created successfully',
       template: newTemplate,
     });
+    return
   } catch (error) {
     res.status(500).json({ message: 'Error creating message template', error });
   }
@@ -42,7 +45,8 @@ export async function sendMessage(req: Request, res: Response) {
     });
 
     if (!template) {
-      return res.status(404).json({ message: 'Template not found' });
+       res.status(404).json({ message: 'Template not found' });
+       return
     }
 
     const buyer = await prisma.users.findUnique({ where: { id: buyerId } });
@@ -51,8 +55,10 @@ export async function sendMessage(req: Request, res: Response) {
       where: { id: productId },
     });
     if (!buyer || !product) {
-      return res.status(404).json({ message: 'Buyer or product not found' });
+       res.status(404).json({ message: 'Buyer or product not found' });
+       return
     }
+    
 
     const store = await prisma.stores.findUnique({
       where: { id: product.storeId },
@@ -66,10 +72,11 @@ export async function sendMessage(req: Request, res: Response) {
       store?.name || 'Toko',
     );
 
-    return res.status(200).json({
+     res.status(200).json({
       message: 'Message generated successfully',
       generatedMessage: messageContent,
     });
+    return
   } catch (error) {
     res.status(500).json({ message: 'Error generating message', error });
   }
@@ -81,7 +88,8 @@ export async function updateMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-    return res.status(401).json({ message: 'User not authenticated' });
+     res.status(401).json({ message: 'User not authenticated' });
+     return
   }
 
   try {
@@ -91,14 +99,17 @@ export async function updateMessageTemplate(req: Request, res: Response) {
     });
 
     if (!existingTemplate) {
-      return res.status(404).json({ message: 'Message template not found' });
+       res.status(404).json({ message: 'Message template not found' });
+       return
     }
 
     if (!existingTemplate.store || existingTemplate.store.userId !== userId) {
-      return res
+       res
         .status(403)
         .json({ message: 'You are not authorized to edit this template' });
+        return
     }
+    
 
     const updatedTemplate = await prisma.message_templates.update({
       where: { id },
@@ -108,10 +119,11 @@ export async function updateMessageTemplate(req: Request, res: Response) {
       },
     });
 
-    return res.status(200).json({
+     res.status(200).json({
       message: 'Message template updated successfully',
       template: updatedTemplate,
     });
+    return
   } catch (error) {
     res.status(500).json({ message: 'Error updating message template', error });
   }
@@ -122,7 +134,8 @@ export async function deleteMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-    return res.status(401).json({ message: 'User not authenticated' });
+     res.status(401).json({ message: 'User not authenticated' });
+     return
   }
 
   try {
@@ -132,20 +145,23 @@ export async function deleteMessageTemplate(req: Request, res: Response) {
     });
 
     if (!existingTemplate) {
-      return res.status(404).json({ message: 'Message template not found' });
+       res.status(404).json({ message: 'Message template not found' });
+       return
     }
 
     if (!existingTemplate.store || existingTemplate.store.userId !== userId) {
-      return res
+       res
         .status(403)
         .json({ message: 'You are not authorized to delete this template' });
+        return
     }
 
     await prisma.message_templates.delete({ where: { id } });
 
-    return res
+     res
       .status(200)
       .json({ message: 'Message template deleted successfully' });
+      return
   } catch (error) {
     res.status(500).json({ message: 'Error deleting message template', error });
   }
@@ -161,7 +177,8 @@ export async function getMessageTemplate(req: Request, res: Response) {
     });
 
     if (!store) {
-      return res.status(403).json({ message: 'Unauthorized: Store not found' });
+       res.status(403).json({ message: 'Unauthorized: Store not found' });
+       return
     }
 
     const templates = await prisma.message_templates.findMany({
@@ -170,10 +187,11 @@ export async function getMessageTemplate(req: Request, res: Response) {
       },
     });
 
-    return res.status(200).json({
+     res.status(200).json({
       message: 'Message templates retrieved successfully',
       templates,
     });
+    return
   } catch (error) {
     res
       .status(500)
