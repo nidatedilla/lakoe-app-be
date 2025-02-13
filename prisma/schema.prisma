@@ -34,6 +34,7 @@ model users {
   cart_items cart_items[]
   invoices   invoices[]
   payments   payments[]
+  orders     orders[]
 }
 
 model carts {
@@ -49,16 +50,15 @@ model carts {
 }
 
 model cart_items {
-  id                   String                 @id @unique @default(cuid())
+  id                   String  @id @unique @default(cuid())
   qty                  Int
   price                Int
-  cart                 carts                  @relation(fields: [cartId], references: [id])
+  cart                 carts   @relation(fields: [cartId], references: [id])
   cartId               String
-  user                 users                  @relation(fields: [userId], references: [id])
+  user                 users   @relation(fields: [userId], references: [id])
   userId               String
-  store                stores                 @relation(fields: [storeId], references: [id])
+  store                stores  @relation(fields: [storeId], references: [id])
   storeId              String
-  variant_option_value variant_option_values? @relation(fields: [variantOptionValueId], references: [id])
   variantOptionValueId String?
 }
 
@@ -68,7 +68,7 @@ model stores {
   banner                String?
   logo                  String?
   description           String
-  domain                String?
+  domain                String?                 @unique
   slogan                String?
   userId                String                  @unique
   user                  users                   @relation(fields: [userId], references: [id])
@@ -80,6 +80,77 @@ model stores {
   message_templates     message_templates[]
   locations             locations[]
   stores_in_decorations stores_in_decorations[]
+  orders                orders[]
+}
+
+model orders {
+  id                                 String        @id @unique @default(cuid())
+  order_number                       String        @unique
+  user                               users?        @relation(fields: [userId], references: [id])
+  userId                             String?
+  store                              stores        @relation(fields: [storeId], references: [id])
+  storeId                            String
+  total_price                        Int
+  discount                           Decimal?
+  status                             String        @default("pending")
+  payment_status                     String        @default("unpaid")
+  payment_method                     String?
+  shipper_contact_name               String?
+  shipper_contact_phone              String?
+  shipper_contact_email              String?
+  shipper_organization               String?
+  origin_contact_name                String
+  origin_contact_phone               String
+  origin_contact_email               String?
+  origin_address                     String
+  origin_note                        String?
+  origin_postal_code                 String
+  origin_latitude                    Float?
+  origin_longitude                   Float?
+  origin_area_id                     String?
+  origin_location_id                 String?
+  origin_collection_method           String?
+  destination_contact_name           String
+  destination_contact_phone          String
+  destination_contact_email          String?
+  destination_address                String
+  destination_note                   String?
+  destination_postal_code            String
+  destination_latitude               Float?
+  destination_longitude              Float?
+  destination_area_id                String?
+  destination_location_id            String?
+  destination_cash_on_delivery       Int?
+  destination_cash_on_delivery_type  String?
+  destination_proof_of_delivery      Boolean?
+  destination_proof_of_delivery_note String?
+  courier                            couriers?     @relation(fields: [courierId], references: [id])
+  courierId                          String?
+  tracking_number                    String?
+  order_note                         String?
+  metadata                           Json?
+  reference_id                       String?       @unique
+  created_at                         DateTime      @default(now())
+  updated_at                         DateTime      @updatedAt
+  order_items                        order_items[]
+  invoices                           invoices?     @relation(fields: [invoicesId], references: [id])
+  invoicesId                         String?
+}
+
+model order_items {
+  id                   String     @id @unique @default(cuid())
+  order                orders     @relation(fields: [orderId], references: [id])
+  orderId              String
+  product              products   @relation(fields: [productId], references: [id])
+  productId            String
+  variant              variants[]
+  variantOptionValueId String?
+  qty                  Int
+  price                Int
+  weight               Int
+  height               Int?
+  length               Int?
+  width                Int?
 }
 
 model bank_accounts {
@@ -92,21 +163,24 @@ model bank_accounts {
 }
 
 model products {
-  id            String              @id @unique @default(cuid())
+  id            String              @id @unique @default(uuid())
   name          String
   description   String
   attachments   String?
   is_active     Boolean?            @default(true)
-  size          Int
+  url           String              @unique
   minimum_order Int
   price         Int
   sku           String?
   stock         Int
-  store         stores              @relation(fields: [storeId], references: [id])
-  storeId       String
+  weight        Int
+  size          Json?
+  stores        stores?             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeId       String?
   categories    productCategories[]
-  variants      variants[]
+  variant       variants[]
   categoryId    String?
+  order_items   order_items[]
 }
 
 model categories {
@@ -127,32 +201,17 @@ model productCategories {
 }
 
 model variants {
-  id              String            @id @unique @default(cuid())
-  name            String
-  product         products          @relation(fields: [productId], references: [id])
-  productId       String
-  is_active       Boolean?
-  variant_options variant_options[]
-}
-
-model variant_options {
-  id                    String                  @id @unique @default(cuid())
-  name                  String
-  variant               variants                @relation(fields: [variantId], references: [id])
-  variantId             String
-  variant_option_values variant_option_values[]
-}
-
-model variant_option_values {
-  id              String           @id @unique @default(cuid())
-  variant_option  variant_options? @relation(fields: [variantOptionId], references: [id])
-  variantOptionId String?
-  sku             String?
-  weight          Int?
-  stock           Int?
-  price           Int
-  is_active       Boolean
-  cart_items      cart_items[]
+  id            String       @id @default(uuid())
+  combination   Json // atau gunakan tipe data lain sesuai kebutuhan, misalnya String jika di-serialize
+  price         Int
+  sku           String?
+  stock         Int
+  weight        Int
+  photo         String?
+  productId     String
+  product       products     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order_items   order_items? @relation(fields: [order_itemsId], references: [id])
+  order_itemsId String?
 }
 
 model confirmation_payment {
@@ -193,6 +252,7 @@ model invoices {
   userId               String
   confirmation_payment confirmation_payment[]
   invoice_histories    invoice_histories[]
+  orders               orders[]
 }
 
 model payments {
@@ -208,14 +268,24 @@ model payments {
 }
 
 model couriers {
-  id                   String    @id @unique @default(cuid())
-  courier_code         String
-  courier_service_name String
-  courier_service_code String
-  price                String
-  invoice              invoices?
-  invoiceId            String?
-  order_id             String    @unique
+  id                               String    @id @unique @default(cuid())
+  available_collection_method      String[]
+  available_for_cash_on_delivery   Boolean
+  available_for_proof_of_delivery  Boolean
+  available_for_instant_waybill_id Boolean
+  courier_name                     String
+  courier_code                     String
+  courier_service_name             String
+  courier_service_code             String
+  tier                             String
+  description                      String
+  service_type                     String
+  shipping_type                    String
+  shipment_duration_range          String
+  shipment_duration_unit           String
+  orders                           orders[]
+  invoices                         invoices?
+  is_selected                      Boolean   @default(false)
 }
 
 model operation_hours {
@@ -256,8 +326,8 @@ model locations {
   address          String?
   postal_code      String?
   city_district    String?
-  latitude         Decimal?
-  longitude        Decimal?
+  latitude         String?
+  longitude        String?
   store            stores?   @relation(fields: [storeId], references: [id])
   storeId          String?
   profile          profiles? @relation(fields: [profileId], references: [id])

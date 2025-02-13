@@ -7,15 +7,19 @@ import storeRouter from './store.route';
 import categoryRouter from './category.route';
 import aiRouter from './ai.route';
 import messageRouter from './message.route';
+import orderRouter from './order.route';
+import courierRouter from './courier.route';
 
 const router = Router();
 
 router.use('/auth', authRouter);
 router.use('/users', auth, userRouter);
 router.use('/product', auth, productRouter);
-router.use('/store', auth, storeRouter);
+router.use('/store', storeRouter);
 router.use('/category', auth, categoryRouter);
 router.use('/message-templates', auth, messageRouter);
+router.use('/orders', orderRouter);
+router.use('/couriers', courierRouter);
 router.use('/ai', aiRouter);
 
 export default router;

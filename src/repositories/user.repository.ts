@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma';
 import { userStore } from '../types/user-store.type';
 import { users } from '@prisma/client';
+import { generateUniqueDomain } from '../utils/domain';
 
 export const getUsersRepository = async () => {
   return await prisma.users.findMany({
@@ -23,6 +24,10 @@ export const registerUserRepository = async (user: users) => {
 };
 
 export const updateStoreSellerRepository = async (user: userStore) => {
+  const newDomain = user.stores?.name
+    ? await generateUniqueDomain(user.stores.name)
+    : '';
+
   return await prisma.users.update({
     where: { id: user.id, role: 'Seller' },
     data: {
@@ -34,6 +39,7 @@ export const updateStoreSellerRepository = async (user: userStore) => {
             banner: user.stores?.banner,
             logo: user.stores?.logo,
             slogan: user.stores?.slogan,
+            domain: newDomain,
           },
           update: {
             name: user.stores?.name || '',
@@ -41,6 +47,7 @@ export const updateStoreSellerRepository = async (user: userStore) => {
             banner: user.stores?.banner,
             logo: user.stores?.logo,
             slogan: user.stores?.slogan,
+            domain: newDomain,
           },
         },
       },

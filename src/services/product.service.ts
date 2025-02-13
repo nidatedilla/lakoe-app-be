@@ -28,7 +28,17 @@ export const updateProductService = async (
   id: string,
   product: Omit<products, 'id'>,
 ) => {
-  return await productRepository.updateProductRepository(id, product);
+  const updatedProductData = {
+    ...product,
+    // Jika property 'size' bernilai null, jadikan undefined
+    size: product.size === null ? undefined : product.size,
+    // Lakukan hal serupa untuk properti lain yang bermasalah jika diperlukan
+  };
+
+  return await productRepository.updateProductRepository(
+    id,
+    updatedProductData,
+  );
 };
 
 export const deleteProductService = async (id: string) => {

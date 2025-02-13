@@ -31,16 +31,19 @@ export const createProductController = async (req: Request, res: Response) => {
   const userId = res.locals.user.id;
 
   try {
-    const {
+    let {
       name,
       description,
       size,
       minimum_order,
+      url,
+      stock,
+      price,
+      weight,
       attachments,
       categoryId,
-      stock,
       sku,
-      price,
+      variant,
     } = req.body;
 
     const file = req.file as Express.Multer.File;
@@ -58,18 +61,37 @@ export const createProductController = async (req: Request, res: Response) => {
     }
 
     const storeId = findUniqueUserById.stores?.id || '';
+
+    // Pastikan variant yang dikirim memiliki format yang sesuai
+    let variantData: any[] = [];
+    if (variant) {
+      if (typeof variant === 'string') {
+        // Jika variant dikirim sebagai string JSON, parsing terlebih dahulu
+        variantData = JSON.parse(variant);
+      } else {
+        variantData = variant;
+      }
+    }
+
+    // Buat object product yang akan dikirim ke service
     const product = {
       name,
       description,
+      url,
       size: parseInt(size, 10),
       minimum_order: parseInt(minimum_order, 10),
       attachments,
       storeId,
       sku,
+      weight: parseInt(weight, 10),
       is_active: true,
       categoryId: categoryId || null,
       stock: parseInt(stock, 10),
       price: parseInt(price, 10),
+      // Menggunakan nested create untuk relasi variant
+      variant: {
+        create: variantData,
+      },
     };
 
     const newProduct = await productService.createProductService(
@@ -91,10 +113,12 @@ export const updateProductController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const {
+    let {
       name,
       description,
       size,
+      url,
+      weight,
       minimum_order,
       attachments,
       storeId,
@@ -109,6 +133,8 @@ export const updateProductController = async (req: Request, res: Response) => {
       name,
       description,
       size,
+      url,
+      weight,
       minimum_order,
       attachments,
       storeId,
@@ -133,7 +159,6 @@ export const updateProductController = async (req: Request, res: Response) => {
   }
 };
 
-
 export const deleteProductController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -150,10 +175,15 @@ export const deleteProductController = async (req: Request, res: Response) => {
     });
   }
 };
-export const getProductsByIsActiveController = async (req: Request, res: Response) => {
+export const getProductsByIsActiveController = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const { isActive } = req.params;
-    const products = await productService.getProductsByIsActiveService(isActive === 'true');
+    const products = await productService.getProductsByIsActiveService(
+      isActive === 'true',
+    );
     res.status(200).json(products);
   } catch (error) {
     console.log(error);
