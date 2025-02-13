@@ -27,8 +27,10 @@ export const createProductRepository = async (
   return await prisma.products.create({
     data: {
       ...product,
+      // Jika product.size bernilai null, ganti dengan undefined
       size: product.size ?? undefined,
-      // buat yang lain
+
+      // Jika categoryId tidak null atau undefined, hubungkan ke kategori
       ...(categoryId && {
         categories: {
           create: {
