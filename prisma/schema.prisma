@@ -320,9 +320,15 @@ model locations {
   name             String?
   address          String?
   postal_code      String?
-  city_district    String?
+  provinces        String?
+  regencies        String?
+  districts        String?
+  villages         String?
   latitude         String?
   longitude        String?
+  contact_name     String
+  contact_phone    String
+  type             String
   store            stores?   @relation(fields: [storeId], references: [id])
   storeId          String?
   profile          profiles? @relation(fields: [profileId], references: [id])
