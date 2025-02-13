@@ -7,13 +7,13 @@ export async function createMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-     res.status(401).json({ message: 'User not authenticated' });
-     return
+    res.status(401).json({ message: 'User not authenticated' });
+    return;
   }
 
   if (!title || !content) {
-     res.status(400).json({ message: 'Title and content are required' });
-     return
+    res.status(400).json({ message: 'Title and content are required' });
+    return;
   }
 
   try {
@@ -25,11 +25,11 @@ export async function createMessageTemplate(req: Request, res: Response) {
       },
     });
 
-     res.status(201).json({
+    res.status(201).json({
       message: 'Message template created successfully',
       template: newTemplate,
     });
-    return
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Error creating message template', error });
   }
@@ -47,7 +47,8 @@ export async function sendMessage(req: Request, res: Response) {
       !productName ||
       !storeName
     ) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      res.status(400).json({ message: 'Missing required fields' });
+      return;
     }
 
     const template = await prisma.message_templates.findUnique({
@@ -55,14 +56,14 @@ export async function sendMessage(req: Request, res: Response) {
     });
 
     if (!template) {
-       res.status(404).json({ message: 'Template not found' });
-       return
+      res.status(404).json({ message: 'Template not found' });
+      return;
     }
 
     if (!template.content) {
-      return res.status(400).json({ message: 'Template content is missing' });
+      res.status(400).json({ message: 'Template content is missing' });
+      return;
     }
-    
 
     let messageContent = template.content
       .replace('[Nama Pembeli]', buyerName)
@@ -72,14 +73,15 @@ export async function sendMessage(req: Request, res: Response) {
     const encodedMessage = querystring.stringify({ text: messageContent });
     const waLink = `https://wa.me/${buyerPhone}?${encodedMessage}`;
 
-     res.status(200).json({
+    res.status(200).json({
       message: 'Message generated successfully',
       generatedMessage: messageContent,
       waLink,
     });
-    return
+    return;
   } catch (error) {
-    return res.status(500).json({ message: 'Error generating message', error });
+    res.status(500).json({ message: 'Error generating message', error });
+    return;
   }
 }
 
@@ -89,8 +91,8 @@ export async function updateMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-     res.status(401).json({ message: 'User not authenticated' });
-     return
+    res.status(401).json({ message: 'User not authenticated' });
+    return;
   }
 
   try {
@@ -100,17 +102,16 @@ export async function updateMessageTemplate(req: Request, res: Response) {
     });
 
     if (!existingTemplate) {
-       res.status(404).json({ message: 'Message template not found' });
-       return
+      res.status(404).json({ message: 'Message template not found' });
+      return;
     }
 
     if (!existingTemplate.store || existingTemplate.store.userId !== userId) {
-       res
+      res
         .status(403)
         .json({ message: 'You are not authorized to edit this template' });
-        return
+      return;
     }
-    
 
     const updatedTemplate = await prisma.message_templates.update({
       where: { id },
@@ -120,11 +121,11 @@ export async function updateMessageTemplate(req: Request, res: Response) {
       },
     });
 
-     res.status(200).json({
+    res.status(200).json({
       message: 'Message template updated successfully',
       template: updatedTemplate,
     });
-    return
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Error updating message template', error });
   }
@@ -135,8 +136,8 @@ export async function deleteMessageTemplate(req: Request, res: Response) {
   const userId = res.locals.user.id;
 
   if (!userId) {
-     res.status(401).json({ message: 'User not authenticated' });
-     return
+    res.status(401).json({ message: 'User not authenticated' });
+    return;
   }
 
   try {
@@ -146,23 +147,21 @@ export async function deleteMessageTemplate(req: Request, res: Response) {
     });
 
     if (!existingTemplate) {
-       res.status(404).json({ message: 'Message template not found' });
-       return
+      res.status(404).json({ message: 'Message template not found' });
+      return;
     }
 
     if (!existingTemplate.store || existingTemplate.store.userId !== userId) {
-       res
+      res
         .status(403)
         .json({ message: 'You are not authorized to delete this template' });
-        return
+      return;
     }
 
     await prisma.message_templates.delete({ where: { id } });
 
-     res
-      .status(200)
-      .json({ message: 'Message template deleted successfully' });
-      return
+    res.status(200).json({ message: 'Message template deleted successfully' });
+    return;
   } catch (error) {
     res.status(500).json({ message: 'Error deleting message template', error });
   }
@@ -178,8 +177,8 @@ export async function getMessageTemplate(req: Request, res: Response) {
     });
 
     if (!store) {
-       res.status(403).json({ message: 'Unauthorized: Store not found' });
-       return
+      res.status(403).json({ message: 'Unauthorized: Store not found' });
+      return;
     }
 
     const templates = await prisma.message_templates.findMany({
@@ -188,11 +187,11 @@ export async function getMessageTemplate(req: Request, res: Response) {
       },
     });
 
-     res.status(200).json({
+    res.status(200).json({
       message: 'Message templates retrieved successfully',
       templates,
     });
-    return
+    return;
   } catch (error) {
     res
       .status(500)

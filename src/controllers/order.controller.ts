@@ -21,7 +21,8 @@ export const getStoreOrders = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
 
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized: User not found' });
+      res.status(401).json({ message: 'Unauthorized: User not found' });
+      return;
     }
 
     const store = await prisma.stores.findFirst({
@@ -30,7 +31,8 @@ export const getStoreOrders = async (req: Request, res: Response) => {
     });
 
     if (!store) {
-      return res.status(404).json({ message: 'Store not found for this user' });
+      res.status(404).json({ message: 'Store not found for this user' });
+      return;
     }
 
     const orders = await getOrdersByStore(store.id);
