@@ -22,3 +22,7 @@ export const fetchStoreWithProducts = async (domain: string) => {
   if (!store) throw new Error('Store not found');
   return store;
 };
+
+export const getStoreDomainByUserId = async (userId: string) => {
+  return await storeRepository.getStoreDomainByUserIdRepo(userId);
+};

@@ -15,6 +15,7 @@ export const findUniqueProductRepository = async (id: string) => {
   return await prisma.products.findUnique({
     where: { id },
     include: {
+      variant: true,
       categories: true,
     },
   });
