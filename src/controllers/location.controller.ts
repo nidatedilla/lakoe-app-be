@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import * as locationRepository from '../repositories/location.repository';
 import * as storeRepository from '../repositories/store.repository';
 
-
 const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY;
 const BITESHIP_API_URL = 'https://api.biteship.com/v1/locations';
 
@@ -173,7 +172,6 @@ export const updateLocationController = async (req: Request, res: Response) => {
       type,
     });
 
-    
     const city_district = `${provinces}, ${regencies}, ${districts}, ${villages}`;
 
     // const response = await axiosInstance.patch(`/${id}`, {
@@ -212,11 +210,15 @@ export const updateLocationController = async (req: Request, res: Response) => {
 
     res.status(200).json(location);
   } catch (error: any) {
-    console.error("Error updating location:", error.response ? error.response.data : error.message);
-    res.status(500).json({ message: error.response?.data?.message || error.message });
+    console.error(
+      'Error updating location:',
+      error.response ? error.response.data : error.message,
+    );
+    res
+      .status(500)
+      .json({ message: error.response?.data?.message || error.message });
   }
 };
-
 
 export const deleteLocationController = async (req: Request, res: Response) => {
   const { id } = req.params;

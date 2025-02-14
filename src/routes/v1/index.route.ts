@@ -11,6 +11,7 @@ import orderRouter from './order.route';
 import courierRouter from './courier.route';
 import locationRouter from './location.route';
 import regionRouter from './region.route';
+import areaRouter from './area.route';
 
 const router = Router();
 
@@ -25,5 +26,6 @@ router.use('/couriers', courierRouter);
 router.use('/location', auth, locationRouter);
 router.use('/ai', aiRouter);
 router.use('/wilayah', regionRouter);
+router.use('/areas', areaRouter);
 
 export default router;
