@@ -51,3 +51,25 @@ export const getSelectedCouriers = async () => {
     throw new Error('Failed to get selected couriers');
   }
 };
+
+export const getCourierRatesRepository = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${BITESHIP_BASE_URL}/v1/rates/couriers`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${BITESHIP_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      'Error fetching courier rates:',
+      error.response?.data || error.message,
+    );
+    throw new Error('Failed to fetch courier rates from Biteship');
+  }
+};

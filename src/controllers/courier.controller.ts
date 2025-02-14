@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   fetchAllCouriers,
   getAllSelectedCouriers,
+  getCourierRatesService,
   getCouriers,
   toggleCourierSelection,
 } from '../services/courier.service';
@@ -59,5 +60,29 @@ export const getSelectedCouriers = async (req: Request, res: Response) => {
       success: false,
       message: error.message || 'Failed to get selected couriers',
     });
+  }
+};
+
+export const getCourierRates = async (req: Request, res: Response) => {
+  try {
+    const { origin_area_id, destination_area_id, couriers, items } = req.body;
+
+    if (!origin_area_id || !destination_area_id || !couriers || !items) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Missing required fields' });
+    }
+
+    const rates = await getCourierRatesService(
+      origin_area_id,
+      destination_area_id,
+      couriers,
+      items,
+    );
+
+    return res.status(200).json({ success: true, rates });
+  } catch (error: any) {
+    console.error('Error in getCourierRates:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -4,6 +4,7 @@ import {
   getAllCouriers,
   updateCourierSelection,
   getSelectedCouriers,
+  getCourierRatesRepository,
 } from '../repositories/courier.repository';
 
 export const getCouriers = async () => {
@@ -40,4 +41,26 @@ export const getAllSelectedCouriers = async () => {
     console.error('Error getting selected couriers:', error);
     throw error;
   }
+};
+
+export const getCourierRatesService = async (
+  origin: string,
+  destination: string,
+  couriers: string,
+  items: any[],
+) => {
+  if (!origin || !destination || !couriers || !items.length) {
+    throw new Error(
+      'Missing required fields: origin, destination, couriers, or items',
+    );
+  }
+
+  const requestData = {
+    origin_area_id: origin,
+    destination_area_id: destination,
+    couriers,
+    items,
+  };
+
+  return await getCourierRatesRepository(requestData);
 };

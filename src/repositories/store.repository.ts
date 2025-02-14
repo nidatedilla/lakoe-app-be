@@ -46,18 +46,17 @@ export const uniqueStoreByName = async (name: string) => {
 export const findUniqueStoreByIdRepository = async (id: string) => {
   return await prisma.stores.findUnique({
     where: { id },
-
   });
-}
+};
 export const findUniqueStoreLocationRepository = async (id: string) => {
   return await prisma.stores.findUnique({
     where: {
-      id
+      id,
     },
     include: {
       user: true,
-      locations: true
-    }
+      locations: true,
+    },
   });
 };
 
@@ -65,5 +64,12 @@ export const getStoreByDomain = async (domain: string) => {
   return await prisma.stores.findUnique({
     where: { domain },
     include: { products: true },
+  });
+};
+
+export const getStoreDomainByUserIdRepo = async (userId: string) => {
+  return prisma.stores.findUnique({
+    where: { userId },
+    select: { domain: true },
   });
 };
