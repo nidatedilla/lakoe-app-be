@@ -27,10 +27,7 @@ const extractProductName = (message: string): string | null => {
   return words.length > 0 ? words.join(' ') : null;
 };
 
-export const getAiResponse = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const getAiResponse = async (req: Request, res: Response): Promise<void> => {
   const { message } = req.body;
 
   const productName = extractProductName(message);
@@ -48,36 +45,44 @@ export const getAiResponse = async (
         res.json({ reply: text });
         return;
       } catch (error) {
-        res.json({ error: 'Error processing request', details: error });
-        return;
+         res.json({error: 'Error processing request', details: error  });
+         return
       }
     }
 
     if (!productName) {
-      res.json({
-        reply:
-          'Mohon berikan nama produk yang valid untuk mendapatkan rekomendasi harga.',
-      });
-      return;
-    }
+       res.json({ reply: "Mohon berikan nama produk yang valid untuk mendapatkan rekomendasi harga." });
+    return
+      }
 
     const products = await findProductByName(productName);
 
     if (products.length > 0) {
-      const product = products[0];
-      res.json({
-        reply: `Produk '${product.name}' sudah ada dalam database. Harga yang sesuai adalah Rp${product.price}.`,
-      });
-    }
+      const productList = products.map(p => `- ${p.name}: Rp${p.price}`).join("\n");
+
+      const prompt = `
+        Berikut adalah daftar produk yang ditemukan dalam database kami:
+        ${productList}
+
+        Berdasarkan produk yang ditemukan, apakah ada saran harga atau rekomendasi lain?
+        jika tidak tolong sebutkan harga untuk barang tersebut
+      `;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = await response.text();
+
+      res.json({ reply: text });
+      return;
+      }
 
     const prompt = `
       Saya ingin menjual produk yang disebutkan dalam pesan ini: "${message}". 
       Jika produk ini tidak ada dalam database, cari harga pasar saat ini di Tokopedia.
       Cari produk di Tokopedia dengan link pencarian: https://www.tokopedia.com/search?st=product&q=${encodeURIComponent(productName)}.
     `;
-
-    console.log(prompt);
-
+    
+    console.log( "prompt",prompt); 
+    
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = await response.text();
