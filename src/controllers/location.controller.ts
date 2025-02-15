@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Request, Response } from 'express';
 import * as locationRepository from '../repositories/location.repository';
 import * as storeRepository from '../repositories/store.repository';
+import { searchAreasFromBiteship } from '../repositories/area.repository';
 
 const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY;
 const BITESHIP_API_URL = 'https://api.biteship.com/v1/locations';
@@ -54,8 +55,20 @@ export const createLocationController = async (req: Request, res: Response) => {
     }
 
     const numPhone = findUniqueStore.user.phone;
-
     const nameContact = findUniqueStore.user.name;
+
+    const areaSearchResult = await searchAreasFromBiteship(
+      postal_code.toString(),
+      'single',
+    );
+
+    if (!areaSearchResult || !areaSearchResult.areas?.length) {
+      return res
+        .status(400)
+        .json({ message: 'Area ID not found for given postal code' });
+    }
+
+    const area_id = areaSearchResult.areas[0].id;
 
     console.log('Creating location with data:', {
       name,
@@ -74,6 +87,7 @@ export const createLocationController = async (req: Request, res: Response) => {
       contact_name: nameContact,
       contact_phone: numPhone,
       type,
+      area_id,
     });
 
     const isExsitingLocation = findUniqueStore.locations;
@@ -109,6 +123,7 @@ export const createLocationController = async (req: Request, res: Response) => {
       contact_name: nameContact,
       contact_phone: numPhone,
       type,
+      area_id,
     });
 
     console.log('create location : ', location);
@@ -174,6 +189,19 @@ export const updateLocationController = async (req: Request, res: Response) => {
 
     const city_district = `${provinces}, ${regencies}, ${districts}, ${villages}`;
 
+    const areaSearchResult = await searchAreasFromBiteship(
+      postal_code,
+      'single',
+    );
+
+    if (!areaSearchResult || !areaSearchResult.areas?.length) {
+      return res
+        .status(400)
+        .json({ message: 'Area ID not found for given postal code' });
+    }
+
+    const area_id = areaSearchResult.areas[0].id;
+
     // const response = await axiosInstance.patch(`/${id}`, {
     //   name,
     //   address,
@@ -206,6 +234,7 @@ export const updateLocationController = async (req: Request, res: Response) => {
       contact_name,
       contact_phone,
       type,
+      area_id,
     });
 
     res.status(200).json(location);

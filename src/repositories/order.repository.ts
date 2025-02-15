@@ -226,3 +226,12 @@ export const getOrderById = async (orderId: string) => {
     },
   });
 };
+
+export const getSellerAreaId = async (storeId: string) => {
+  const location = await prisma.locations.findFirst({
+    where: { storeId },
+    select: { area_id: true },
+  });
+
+  return location || null;
+};
