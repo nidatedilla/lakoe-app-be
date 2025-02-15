@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
 import {
   createNewOrder,
+  getCourierRates,
   getOrderByIdService,
   getOrdersByStore,
 } from '../services/order.service';
 import prisma from '../utils/prisma';
+import { getSelectedCouriers } from '../repositories/courier.repository';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -56,5 +58,64 @@ export const getOrder = async (req: Request, res: Response) => {
     const errorMessage =
       error instanceof Error ? error.message : 'Something went wrong';
     res.status(403).json({ message: errorMessage });
+  }
+};
+
+export const fetchCourierRates = async (req: Request, res: Response) => {
+  try {
+    const { store_id, destination_area_id, items } = req.body;
+
+    if (!store_id || !destination_area_id || !items || items.length === 0) {
+      return res
+        .status(400)
+        .json({ message: 'Missing required fields or items are empty' });
+    }
+
+    const selectedCouriers = await getSelectedCouriers();
+    if (!selectedCouriers.length) {
+      return res.status(404).json({ message: 'No selected couriers found' });
+    }
+
+    const courierCodes = [
+      ...new Set(selectedCouriers.map((courier) => courier.courier_code)),
+    ].join(',');
+    console.log('Courier codes sent to Biteship:', courierCodes);
+
+    const formattedItems = items.map((item: any) => ({
+      name: item.name || 'Unknown',
+      description: item.description || 'No description',
+      value: item.value || 0,
+      length: item.length || 0,
+      width: item.width || 0,
+      height: item.height || 0,
+      weight: item.weight || 0,
+      quantity: item.quantity || 1,
+    }));
+
+    const response = await getCourierRates(
+      store_id,
+      destination_area_id,
+      formattedItems,
+      courierCodes,
+    );
+    console.log('Biteship API Response:', JSON.stringify(response, null, 2));
+
+    const formattedRates = response.pricing.map((courier: any) => ({
+      courier_name: courier.courier_name,
+      courier_code: courier.courier_code,
+      shipping_type: courier.shipping_type,
+      service_code: courier.courier_service_code,
+      service_name: courier.courier_service_name,
+      description: courier.description,
+      duration: courier.duration,
+      price: courier.price,
+    }));
+
+    return res.json(formattedRates);
+  } catch (error) {
+    console.error('Error fetching courier rates:', error);
+    return res.status(500).json({
+      message: error instanceof Error ? error.message : 'Something went wrong',
+    });
   }
 };

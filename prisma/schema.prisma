@@ -339,5 +339,6 @@ model locations {
   profile          profiles? @relation(fields: [profileId], references: [id])
   profileId        String?
   is_main_location Boolean?
+  area_id          String
   guestId          String? @unique
 }

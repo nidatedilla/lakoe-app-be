@@ -21,6 +21,7 @@ export const createLocationRepository = async (location: locations) => {
       districts: location.districts,
       villages: location.villages,
       type: location.type,
+      area_id: location.area_id,
       guestId: location.guestId,
     },
   });
@@ -100,6 +101,7 @@ export const updateLocationRepository = async (location: locations) => {
       profileId: location.profileId,
       longitude: location.longitude,
       latitude: location.latitude,
+      area_id: location.area_id,
     },
   });
 };
@@ -115,7 +117,6 @@ export const findAllLocationByUserRepository = async (storeId: string) => {
     where: { id: storeId },
   });
 };
-
 
 export const findGuestLocation = async (guestId: string) => {
   return await prisma.locations.findUnique({

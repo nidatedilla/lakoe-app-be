@@ -1,12 +1,15 @@
+import axios from 'axios';
 import {
   createGuestUser,
   createOrder,
   findStoreByUserId,
   getOrderById,
   getOrdersByStoreId,
+  getSellerAreaId,
   updateOrderWithTracking,
 } from '../repositories/order.repository';
 import { createBiteshipOrder } from './biteship.service';
+import { BITESHIP_API_KEY, BITESHIP_BASE_URL } from '../config/biteship';
 
 export const createNewOrder = async (orderData: any) => {
   let userId = orderData.userId;
@@ -61,4 +64,34 @@ export const getOrderByIdService = async (userId: string, orderId: string) => {
   }
 
   return order;
+};
+
+export const getCourierRates = async (
+  storeId: string,
+  destinationAreaId: string,
+  items: any,
+  couriers: string,
+) => {
+  const location = await getSellerAreaId(storeId);
+  if (!location || !location.area_id) {
+    throw new Error('Store location not found');
+  }
+
+  const response = await axios.post(
+    `${BITESHIP_BASE_URL}/v1/rates/couriers`,
+    {
+      origin_area_id: location.area_id,
+      destination_area_id: destinationAreaId,
+      couriers: couriers,
+      items: items,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${BITESHIP_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  return response.data;
 };
