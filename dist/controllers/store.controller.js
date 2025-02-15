@@ -105,11 +105,13 @@ const getStoreDomain = async (req, res) => {
     try {
         const userId = res.locals.user.id;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
         }
         const store = await storeService.getStoreDomainByUserId(userId);
         if (!store) {
-            return res.status(404).json({ message: 'Shop not found' });
+            res.status(404).json({ message: 'Shop not found' });
+            return;
         }
         res.json({ domain: store.domain });
     }

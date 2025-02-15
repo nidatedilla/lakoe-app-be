@@ -58,13 +58,15 @@ const fetchCourierRates = async (req, res) => {
     try {
         const { store_id, destination_area_id, items } = req.body;
         if (!store_id || !destination_area_id || !items || items.length === 0) {
-            return res
+            res
                 .status(400)
                 .json({ message: 'Missing required fields or items are empty' });
+            return;
         }
         const selectedCouriers = await (0, courier_repository_1.getSelectedCouriers)();
         if (!selectedCouriers.length) {
-            return res.status(404).json({ message: 'No selected couriers found' });
+            res.status(404).json({ message: 'No selected couriers found' });
+            return;
         }
         const courierCodes = [
             ...new Set(selectedCouriers.map((courier) => courier.courier_code)),
@@ -80,9 +82,9 @@ const fetchCourierRates = async (req, res) => {
             weight: item.weight || 0,
             quantity: item.quantity || 1,
         }));
-        const response = await (0, order_service_1.getCourierRates)(store_id, destination_area_id, formattedItems, courierCodes);
-        console.log('Biteship API Response:', JSON.stringify(response, null, 2));
-        const formattedRates = response.pricing.map((courier) => ({
+        const responseData = await (0, order_service_1.getCourierRates)(store_id, destination_area_id, formattedItems, courierCodes);
+        console.log('Biteship API Response:', JSON.stringify(responseData, null, 2));
+        const formattedRates = responseData.pricing.map((courier) => ({
             courier_name: courier.courier_name,
             courier_code: courier.courier_code,
             shipping_type: courier.shipping_type,
@@ -92,11 +94,11 @@ const fetchCourierRates = async (req, res) => {
             duration: courier.duration,
             price: courier.price,
         }));
-        return res.json(formattedRates);
+        res.json(formattedRates);
     }
     catch (error) {
         console.error('Error fetching courier rates:', error);
-        return res.status(500).json({
+        res.status(500).json({
             message: error instanceof Error ? error.message : 'Something went wrong',
         });
     }
