@@ -23,7 +23,7 @@ router.use('/category', auth, categoryRouter);
 router.use('/message-templates', auth, messageRouter);
 router.use('/orders', orderRouter);
 router.use('/couriers', courierRouter);
-router.use('/location', auth, locationRouter);
+router.use('/location', locationRouter);
 router.use('/ai', aiRouter);
 router.use('/wilayah', regionRouter);
 router.use('/areas', areaRouter);

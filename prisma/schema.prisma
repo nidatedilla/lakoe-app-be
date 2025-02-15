@@ -340,4 +340,5 @@ model locations {
   profileId        String?
   is_main_location Boolean?
   area_id          String
+  guestId          String? @unique
 }
