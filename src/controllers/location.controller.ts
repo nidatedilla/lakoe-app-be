@@ -42,6 +42,7 @@ export const createLocationController = async (req: Request, res: Response) => {
     storeId,
     profileId,
     type,
+    guestId,
   } = req.body;
 
   try {
@@ -74,6 +75,7 @@ export const createLocationController = async (req: Request, res: Response) => {
       contact_name: nameContact,
       contact_phone: numPhone,
       type,
+      guestId,
     });
 
     const isExsitingLocation = findUniqueStore.locations;
@@ -109,6 +111,7 @@ export const createLocationController = async (req: Request, res: Response) => {
       contact_name: nameContact,
       contact_phone: numPhone,
       type,
+      guestId,
     });
 
     console.log('create location : ', location);
@@ -156,6 +159,7 @@ export const updateLocationController = async (req: Request, res: Response) => {
     contact_name,
     contact_phone,
     type,
+    guestId,
   } = req.body;
 
   try {
@@ -170,6 +174,7 @@ export const updateLocationController = async (req: Request, res: Response) => {
       contact_name,
       contact_phone,
       type,
+      guestId,
     });
 
     const city_district = `${provinces}, ${regencies}, ${districts}, ${villages}`;
@@ -206,6 +211,7 @@ export const updateLocationController = async (req: Request, res: Response) => {
       contact_name,
       contact_phone,
       type,
+      guestId,
     });
 
     res.status(200).json(location);
@@ -230,5 +236,119 @@ export const deleteLocationController = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error deleting location:', error.message);
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const createBuyerLocation = async (req: Request, res: Response) => {
+  const {
+    name,
+    address,
+    postal_code,
+    city_district,
+    latitude,
+    provinces,
+    regencies,
+    districts,
+    villages,
+    longitude,
+    is_main_location,
+    storeId,
+    profileId,
+    type,
+    contact_phone,
+    contact_name,
+    guestId,
+  } = req.body;
+
+  try {
+    console.log('Creating location with data:', {
+      name,
+      address,
+      postal_code,
+      city_district,
+      provinces,
+      regencies,
+      districts,
+      villages,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      is_main_location,
+      storeId,
+      profileId,
+      contact_name,
+      contact_phone,
+      type,
+      guestId,
+    });
+
+    const response = await axiosInstance.post('/', {
+      name,
+      address,
+      postal_code,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      is_main_location: true,
+      contact_name,
+      contact_phone,
+      type,
+    });
+
+    console.log('Biteship response:', response.data);
+
+    const location = await locationRepository.createBuyerLocationRepository({
+      id: response.data.id,
+      name,
+      address,
+      postal_code,
+      provinces,
+      regencies,
+      guestId,
+      districts,
+      villages,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      is_main_location: false,
+      storeId: undefined,
+      profileId: undefined,
+      contact_name,
+      contact_phone,
+      type,
+    });
+
+    console.log('create location : ', location);
+    console.log('guest id:', guestId);
+
+    res.status(201).json(location);
+  } catch (error: any) {
+    console.error(
+      'Error creating location:',
+      error.response ? error.response.data : error.message,
+    );
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getGuestLocation = async (req: Request, res: Response) => {
+  const guestId = req.params.guestId;
+
+
+  console.log('Guest ID dari request:', guestId);
+
+  if (!guestId) {
+    res.status(400).json({ error: 'guestId is required' });
+    return;
+  }
+
+  try {
+    const guestLocations = await locationRepository.findGuestLocation(guestId);
+
+    console.log('Lokasi yang ditemukan:', guestLocations);
+
+
+    res.json(guestLocations);
+  } catch (error) {
+    console.error('Error fetching guest locations:', error);
+    res.status(500).json({ error: 'Error fetching guest locations' });
+    return;
   }
 };
