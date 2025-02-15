@@ -17,5 +17,6 @@ export interface Locations {
   profile?: string;
   profileId?: string;
   is_main_location: boolean;
+  area_id: string;
   guestId: string;
 }
