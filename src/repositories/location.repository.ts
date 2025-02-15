@@ -1,6 +1,6 @@
 import { locations } from '@prisma/client';
 import prisma from '../utils/prisma';
-import { Locations } from '../types/location.tye';
+import { Locations } from '../types/location.type';
 
 export const createLocationRepository = async (location: locations) => {
   return await prisma.locations.create({
@@ -21,8 +21,8 @@ export const createLocationRepository = async (location: locations) => {
       districts: location.districts,
       villages: location.villages,
       type: location.type,
-      area_id: location.area_id,
       guestId: location.guestId,
+      area_id: location.area_id,
     },
   });
 };
@@ -65,6 +65,7 @@ export const createBuyerLocationRepository = async (location: Locations) => {
       villages: location.villages,
       type: location.type,
       guestId: location.guestId,
+      area_id: location.area_id,
     },
   });
 };
@@ -120,6 +121,6 @@ export const findAllLocationByUserRepository = async (storeId: string) => {
 
 export const findGuestLocation = async (guestId: string) => {
   return await prisma.locations.findUnique({
-    where: {  guestId  },
+    where: { guestId },
   });
 };

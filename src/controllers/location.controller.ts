@@ -310,6 +310,19 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
       guestId,
     });
 
+    const areaSearchResult = await searchAreasFromBiteship(
+      postal_code.toString(),
+      'single',
+    );
+
+    if (!areaSearchResult || !areaSearchResult.areas?.length) {
+      return res
+        .status(400)
+        .json({ message: 'Area ID not found for given postal code' });
+    }
+
+    const area_id = areaSearchResult.areas[0].id;
+
     const response = await axiosInstance.post('/', {
       name,
       address,
@@ -342,6 +355,7 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
       contact_name,
       contact_phone,
       type,
+      area_id,
     });
 
     console.log('create location : ', location);
@@ -360,7 +374,6 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
 export const getGuestLocation = async (req: Request, res: Response) => {
   const guestId = req.params.guestId;
 
-
   console.log('Guest ID dari request:', guestId);
 
   if (!guestId) {
@@ -372,7 +385,6 @@ export const getGuestLocation = async (req: Request, res: Response) => {
     const guestLocations = await locationRepository.findGuestLocation(guestId);
 
     console.log('Lokasi yang ditemukan:', guestLocations);
-
 
     res.json(guestLocations);
   } catch (error) {
