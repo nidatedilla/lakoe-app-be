@@ -61,19 +61,24 @@ export const getOrder = async (req: Request, res: Response) => {
   }
 };
 
-export const fetchCourierRates = async (req: Request, res: Response) => {
+export const fetchCourierRates = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const { store_id, destination_area_id, items } = req.body;
 
     if (!store_id || !destination_area_id || !items || items.length === 0) {
-      return res
+      res
         .status(400)
         .json({ message: 'Missing required fields or items are empty' });
+      return;
     }
 
     const selectedCouriers = await getSelectedCouriers();
     if (!selectedCouriers.length) {
-      return res.status(404).json({ message: 'No selected couriers found' });
+      res.status(404).json({ message: 'No selected couriers found' });
+      return;
     }
 
     const courierCodes = [
@@ -92,15 +97,18 @@ export const fetchCourierRates = async (req: Request, res: Response) => {
       quantity: item.quantity || 1,
     }));
 
-    const response = await getCourierRates(
+    const responseData = await getCourierRates(
       store_id,
       destination_area_id,
       formattedItems,
       courierCodes,
     );
-    console.log('Biteship API Response:', JSON.stringify(response, null, 2));
+    console.log(
+      'Biteship API Response:',
+      JSON.stringify(responseData, null, 2),
+    );
 
-    const formattedRates = response.pricing.map((courier: any) => ({
+    const formattedRates = responseData.pricing.map((courier: any) => ({
       courier_name: courier.courier_name,
       courier_code: courier.courier_code,
       shipping_type: courier.shipping_type,
@@ -111,10 +119,10 @@ export const fetchCourierRates = async (req: Request, res: Response) => {
       price: courier.price,
     }));
 
-    return res.json(formattedRates);
+    res.json(formattedRates);
   } catch (error) {
     console.error('Error fetching courier rates:', error);
-    return res.status(500).json({
+    res.status(500).json({
       message: error instanceof Error ? error.message : 'Something went wrong',
     });
   }
