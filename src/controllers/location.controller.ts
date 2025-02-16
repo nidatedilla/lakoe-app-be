@@ -64,10 +64,12 @@ export const createLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-      return res
+       res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
+        return
     }
+    
 
     const area_id = areaSearchResult.areas[0].id;
 
@@ -200,9 +202,10 @@ export const updateLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-      return res
+       res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
+        return
     }
 
     const area_id = areaSearchResult.areas[0].id;
@@ -316,9 +319,10 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-      return res
+       res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
+        return
     }
 
     const area_id = areaSearchResult.areas[0].id;
