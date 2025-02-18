@@ -47,6 +47,7 @@ export const createBuyerLocationRepository = async (location: Locations) => {
       villages: location.villages,
       type: location.type,
       guestId: location.guestId,
+      area_id: location.area_id,
     },
     create: {
       name: location.name,
