@@ -23,27 +23,17 @@ export const createBiteshipOrder = async (orderData: any) => {
   );
 
   const payload = {
-    shipper_contact_name: orderData.shipper_contact_name || '',
-    shipper_contact_phone: orderData.shipper_contact_phone || '',
-    shipper_contact_email: orderData.shipper_contact_email || '',
-    shipper_organization: orderData.shipper_organization || '',
     origin_contact_name: orderData.origin_contact_name || '',
     origin_contact_phone: orderData.origin_contact_phone || '',
     origin_address: orderData.origin_address || '',
-    origin_note: orderData.origin_note || '',
     origin_postal_code: String(orderData.origin_postal_code) || '',
     destination_contact_name: orderData.destination_contact_name || '',
     destination_contact_phone: orderData.destination_contact_phone || '',
-    destination_contact_email: orderData.destination_contact_email || '',
     destination_address: orderData.destination_address || '',
     destination_postal_code: String(orderData.destination_postal_code) || '',
-    destination_note: orderData.destination_note || '',
     courier_company: orderData.courier_company || '',
     courier_type: orderData.courier_type || '',
-    courier_insurance: orderData.courier_insurance || 0,
     delivery_type: orderData.delivery_type || 'now',
-    order_note: orderData.order_note || '',
-    metadata: orderData.metadata || {},
     items: items,
   };
 

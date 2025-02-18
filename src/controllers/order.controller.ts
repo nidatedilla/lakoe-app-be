@@ -10,11 +10,25 @@ import { getSelectedCouriers } from '../repositories/courier.repository';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const order = await createNewOrder(req.body);
+    const { order, midtransTransaction } = await createNewOrder(req.body);
 
-    res.status(201).json({ success: true, data: order });
+    res.status(201).json({
+      success: true,
+      data: order,
+      midtrans_token:
+        midtransTransaction && 'token' in midtransTransaction
+          ? midtransTransaction.token
+          : null,
+      redirect_url:
+        midtransTransaction && 'redirect_url' in midtransTransaction
+          ? midtransTransaction.redirect_url
+          : null,
+    });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -85,9 +99,6 @@ export const fetchCourierRates = async (req: Request, res: Response) => {
       name: item.name || 'Unknown',
       description: item.description || 'No description',
       value: item.value || 0,
-      length: item.length || 0,
-      width: item.width || 0,
-      height: item.height || 0,
       weight: item.weight || 0,
       quantity: item.quantity || 1,
     }));
@@ -107,6 +118,8 @@ export const fetchCourierRates = async (req: Request, res: Response) => {
       service_code: courier.courier_service_code,
       service_name: courier.courier_service_name,
       description: courier.description,
+      shipment_duration_range: courier.shipment_duration_range,
+      shipment_duration_unit: courier.shipment_duration_unit,
       duration: courier.duration,
       price: courier.price,
     }));

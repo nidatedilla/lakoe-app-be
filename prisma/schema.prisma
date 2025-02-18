@@ -84,57 +84,32 @@ model stores {
 }
 
 model orders {
-  id                                 String        @id @unique @default(cuid())
-  order_number                       String        @unique
-  user                               users?        @relation(fields: [userId], references: [id])
-  userId                             String?
-  store                              stores        @relation(fields: [storeId], references: [id])
-  storeId                            String
-  total_price                        Int
-  discount                           Decimal?
-  status                             String        @default("pending")
-  payment_status                     String        @default("unpaid")
-  payment_method                     String?
-  shipper_contact_name               String?
-  shipper_contact_phone              String?
-  shipper_contact_email              String?
-  shipper_organization               String?
-  origin_contact_name                String
-  origin_contact_phone               String
-  origin_contact_email               String?
-  origin_address                     String
-  origin_note                        String?
-  origin_postal_code                 String
-  origin_latitude                    Float?
-  origin_longitude                   Float?
-  origin_area_id                     String?
-  origin_location_id                 String?
-  origin_collection_method           String?
-  destination_contact_name           String
-  destination_contact_phone          String
-  destination_contact_email          String?
-  destination_address                String
-  destination_note                   String?
-  destination_postal_code            String
-  destination_latitude               Float?
-  destination_longitude              Float?
-  destination_area_id                String?
-  destination_location_id            String?
-  destination_cash_on_delivery       Int?
-  destination_cash_on_delivery_type  String?
-  destination_proof_of_delivery      Boolean?
-  destination_proof_of_delivery_note String?
-  courier                            couriers?     @relation(fields: [courierId], references: [id])
-  courierId                          String?
-  tracking_number                    String?
-  order_note                         String?
-  metadata                           Json?
-  reference_id                       String?       @unique
-  created_at                         DateTime      @default(now())
-  updated_at                         DateTime      @updatedAt
-  order_items                        order_items[]
-  invoices                           invoices?     @relation(fields: [invoicesId], references: [id])
-  invoicesId                         String?
+  id                        String        @id @unique @default(cuid())
+  order_number              String?
+  user                      users?        @relation(fields: [userId], references: [id])
+  userId                    String?
+  store                     stores        @relation(fields: [storeId], references: [id])
+  storeId                   String
+  total_price               Int
+  status                    String        @default("Belum Dibayar")
+  payment_status            String        @default("Belum Dibayar")
+  payment_method            String?
+  origin_contact_name       String
+  origin_contact_phone      String
+  origin_address            String
+  origin_postal_code        String
+  destination_contact_name  String
+  destination_contact_phone String
+  destination_address       String
+  destination_postal_code   String
+  courier                   couriers?     @relation(fields: [courierId], references: [id])
+  courierId                 String?
+  tracking_number           String?
+  created_at                DateTime      @default(now())
+  updated_at                DateTime      @updatedAt
+  order_items               order_items[]
+  invoices                  invoices?     @relation(fields: [invoicesId], references: [id])
+  invoicesId                String?
 }
 
 model order_items {
@@ -202,7 +177,7 @@ model productCategories {
 
 model variants {
   id            String       @id @default(uuid())
-  combination   Json // atau gunakan tipe data lain sesuai kebutuhan, misalnya String jika di-serialize
+  combination   Json
   price         Int
   sku           String?
   stock         Int
@@ -247,7 +222,7 @@ model invoices {
   payment              payments?
   paymentId            String                 @unique
   courier              couriers               @relation(fields: [courierId], references: [id])
-  courierId            String                 @unique
+  courierId            String
   user                 users                  @relation(fields: [userId], references: [id])
   userId               String
   confirmation_payment confirmation_payment[]
@@ -284,7 +259,7 @@ model couriers {
   shipment_duration_range          String
   shipment_duration_unit           String
   orders                           orders[]
-  invoices                         invoices?
+  invoices                         invoices[]
   is_selected                      Boolean   @default(false)
 }
 
@@ -340,5 +315,5 @@ model locations {
   profileId        String?
   is_main_location Boolean?
   area_id          String
-  guestId          String? @unique
+  guestId          String?   @unique
 }

@@ -8,8 +8,8 @@ import {
   getSellerAreaId,
   updateOrderWithTracking,
 } from '../repositories/order.repository';
-import { createBiteshipOrder } from './biteship.service';
 import { BITESHIP_API_KEY, BITESHIP_BASE_URL } from '../config/biteship';
+import { createMidtransTransaction } from '../controllers/transaction.controller';
 
 export const createNewOrder = async (orderData: any) => {
   let userId = orderData.userId;
@@ -21,22 +21,9 @@ export const createNewOrder = async (orderData: any) => {
 
   const order = await createOrder(orderData, userId);
 
-  const updatedOrderData = {
-    ...orderData,
-    order_items: order.order_items.map((item: any) => ({
-      ...item,
-      product: {
-        ...item.product,
-        categories: item.product.categories,
-      },
-    })),
-  };
+  const midtransTransaction = await createMidtransTransaction(order);
 
-  const biteshipResponse = await createBiteshipOrder(updatedOrderData);
-
-  await updateOrderWithTracking(order.id, biteshipResponse.id);
-
-  return { order, biteshipResponse };
+  return { order, midtransTransaction };
 };
 
 export const getOrdersByStore = async (storeId: string) => {
