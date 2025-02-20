@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getSelectedCouriers } from '../repositories/courier.repository';
 import {
   createNewOrder,
   getCourierRates,
@@ -6,15 +7,17 @@ import {
   getOrdersByStore,
 } from '../services/order.service';
 import prisma from '../utils/prisma';
-import { getSelectedCouriers } from '../repositories/courier.repository';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
     const { order, midtransTransaction } = await createNewOrder(req.body);
 
+    const paymentStatus = midtransTransaction?.status || 'pending';
+
     res.status(201).json({
       success: true,
       data: order,
+      payment_status: paymentStatus,
       midtrans_token:
         midtransTransaction && 'token' in midtransTransaction
           ? midtransTransaction.token
@@ -98,6 +101,7 @@ export const fetchCourierRates = async (
     const courierCodes = [
       ...new Set(selectedCouriers.map((courier) => courier.courier_code)),
     ].join(',');
+
     console.log('Courier codes sent to Biteship:', courierCodes);
 
     const formattedItems = items.map((item: any) => ({
@@ -114,23 +118,42 @@ export const fetchCourierRates = async (
       formattedItems,
       courierCodes,
     );
-    console.log(
-      'Biteship API Response:',
-      JSON.stringify(responseData, null, 2),
-    );
 
-    const formattedRates = responseData.pricing.map((courier: any) => ({
-      courier_name: courier.courier_name,
-      courier_code: courier.courier_code,
-      shipping_type: courier.shipping_type,
-      service_code: courier.courier_service_code,
-      service_name: courier.courier_service_name,
-      description: courier.description,
-      shipment_duration_range: courier.shipment_duration_range,
-      shipment_duration_unit: courier.shipment_duration_unit,
-      duration: courier.duration,
-      price: courier.price,
-    }));
+    console.log('Biteship API Response:', JSON.stringify(response, null, 2));
+
+    const formattedRates = response.pricing
+      .map((courier: any) => {
+        console.log('Pricing from Biteship:', response.pricing);
+        console.log('Courier from Biteship:', courier);
+        console.log('Matching selected couriers:', selectedCouriers);
+
+        const selectedCourier = selectedCouriers.find(
+          (selected) =>
+            selected.courier_code === courier.courier_code &&
+            selected.courier_service_code === courier.courier_service_code,
+        );
+
+        console.log('Selected Courier:', selectedCourier);
+
+        if (!selectedCourier) {
+          return null;
+        }
+
+        return {
+          courier_id: selectedCourier.id,
+          courier_name: courier.courier_name,
+          courier_code: courier.courier_code,
+          shipping_type: courier.shipping_type,
+          service_code: courier.courier_service_code,
+          service_name: courier.courier_service_name,
+          description: courier.description,
+          shipment_duration_range: courier.shipment_duration_range,
+          shipment_duration_unit: courier.shipment_duration_unit,
+          duration: courier.duration,
+          price: courier.price,
+        };
+      })
+      .filter(Boolean);
 
     res.json(formattedRates);
   } catch (error) {
@@ -138,5 +161,24 @@ export const fetchCourierRates = async (
     res.status(500).json({
       message: error instanceof Error ? error.message : 'Something went wrong',
     });
+  }
+};
+
+export const getOrderById = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await prisma.orders.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

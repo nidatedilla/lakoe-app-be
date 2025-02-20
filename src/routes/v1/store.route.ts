@@ -10,6 +10,7 @@ storeRouter.patch('/update', auth, storeController.updateStoreController);
 storeRouter.delete('/delete', auth, storeController.deleteStoreController);
 storeRouter.get('/domain', auth, storeController.getStoreDomain);
 storeRouter.get('/:domain', storeController.getStoreWithProducts);
+storeRouter.get('/logo/:domain', storeController.getLogoStore);
 storeRouter.get('/product/:id', getProductByIdController);
 
 export default storeRouter;

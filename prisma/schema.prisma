@@ -22,44 +22,17 @@ model profiles {
 }
 
 model users {
-  id         String       @id @unique @default(cuid())
-  name       String
-  email      String       @unique
-  phone      String       @unique
-  password   String
-  role       String?
-  profile    profiles?
-  cart       carts?
-  stores     stores?
-  cart_items cart_items[]
-  invoices   invoices[]
-  payments   payments[]
-  orders     orders[]
-}
-
-model carts {
-  id         String       @id @unique @default(cuid())
-  prices     Int
-  user       users        @relation(fields: [userId], references: [id])
-  userId     String       @unique
-  discount   Decimal?
-  store      stores       @relation(fields: [storeId], references: [id])
-  storeId    String
-  cart_items cart_items[]
-  invoice    invoices?
-}
-
-model cart_items {
-  id                   String  @id @unique @default(cuid())
-  qty                  Int
-  price                Int
-  cart                 carts   @relation(fields: [cartId], references: [id])
-  cartId               String
-  user                 users   @relation(fields: [userId], references: [id])
-  userId               String
-  store                stores  @relation(fields: [storeId], references: [id])
-  storeId              String
-  variantOptionValueId String?
+  id       String     @id @unique @default(cuid())
+  name     String
+  email    String     @unique
+  phone    String     @unique
+  password String
+  role     String?
+  profile  profiles?
+  stores   stores?
+  invoices invoices[]
+  payments payments[]
+  orders   orders[]
 }
 
 model stores {
@@ -74,8 +47,6 @@ model stores {
   user                  users                   @relation(fields: [userId], references: [id])
   bank_accounts         bank_accounts[]
   products              products[]
-  carts                 carts[]
-  cart_items            cart_items[]
   operation_hours       operation_hours[]
   message_templates     message_templates[]
   locations             locations[]
@@ -104,7 +75,11 @@ model orders {
   destination_postal_code   String
   courier                   couriers?     @relation(fields: [courierId], references: [id])
   courierId                 String?
+  rate_courier              Int?
   tracking_number           String?
+  courier_tracking_id       String?
+  courier_waybill_id        String?
+  courier_link              String?
   created_at                DateTime      @default(now())
   updated_at                DateTime      @updatedAt
   order_items               order_items[]
@@ -210,15 +185,10 @@ model invoices {
   prices               Int
   service_charge       Int?
   status               String
-  reciver_longitude    Decimal?
-  receiver_latitude    Decimal?
-  receiver_district    String?
-  receiver_phone       Int?
+  receiver_phone       String?
   receiver_address     String?
   receiver_name        String?
   invoice_number       String?
-  cart                 carts?                 @relation(fields: [cartId], references: [id])
-  cartId               String?                @unique
   payment              payments?
   paymentId            String                 @unique
   courier              couriers               @relation(fields: [courierId], references: [id])
@@ -243,7 +213,7 @@ model payments {
 }
 
 model couriers {
-  id                               String    @id @unique @default(cuid())
+  id                               String     @id @unique @default(cuid())
   available_collection_method      String[]
   available_for_cash_on_delivery   Boolean
   available_for_proof_of_delivery  Boolean
@@ -260,7 +230,7 @@ model couriers {
   shipment_duration_unit           String
   orders                           orders[]
   invoices                         invoices[]
-  is_selected                      Boolean   @default(false)
+  is_selected                      Boolean    @default(false)
 }
 
 model operation_hours {

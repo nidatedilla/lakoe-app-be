@@ -105,3 +105,15 @@ export const getStoreDomain = async (
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+export const getLogoStore = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+
+    const storeLogo = await storeService.getStoreLogoByDomain(domain);
+    res.json(storeLogo);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
