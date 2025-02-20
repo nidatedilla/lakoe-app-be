@@ -1,4 +1,3 @@
-import { Request, Response } from 'express';
 import snap from '../config/midtrans';
 
 export const createMidtransTransaction = async (order: any) => {
@@ -30,9 +29,12 @@ export const createMidtransTransaction = async (order: any) => {
 
     const transaction = await snap.createTransaction(parameter);
 
+    const transactionStatus = transaction.transaction_status;
+
     return {
       token: transaction.token,
       redirect_url: transaction.redirect_url,
+      status: transactionStatus,
     };
   } catch (error) {
     console.error('Midtrans Error:', error);

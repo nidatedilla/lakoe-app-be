@@ -23,6 +23,11 @@ export const createOrder = async (orderData: any, userId?: string) => {
 
   let totalPrice = 0;
 
+  const store = await prisma.stores.findUnique({
+    where: { id: orderData.storeId },
+    include: { user: true, locations: true },
+  });
+
   const orderItemsData = await Promise.all(
     orderData.order_items.map(async (item: any) => {
       const product = await prisma.products.findUnique({
@@ -37,6 +42,14 @@ export const createOrder = async (orderData: any, userId?: string) => {
               category: true,
             },
           },
+          variant: {
+            select: {
+              id: true,
+              combination: true,
+              price: true,
+              weight: true,
+            },
+          },
         },
       });
 
@@ -44,15 +57,21 @@ export const createOrder = async (orderData: any, userId?: string) => {
         throw new Error(`Product with ID ${item.productId} not found`);
       }
 
-      const itemTotalPrice = product.price * item.qty;
+      const variant = product.variant[0];
+      const itemPrice = variant?.price ?? product.price;
+      const itemWeight = variant?.weight ?? product.weight;
+      const variantName = variant?.combination ?? null;
+
+      const itemTotalPrice = itemPrice * item.qty;
       totalPrice += itemTotalPrice;
 
       return {
         productId: item.productId,
-        variantOptionValueId: item.variantOptionValueId ?? null,
+        variantOptionValueId: variant?.id ?? null,
+        variantName: variantName,
         qty: item.qty,
-        price: product.price,
-        weight: product.weight,
+        price: itemPrice,
+        weight: itemWeight,
         name: product.name,
         description: product.description,
         categories: product.categories,
@@ -77,18 +96,19 @@ export const createOrder = async (orderData: any, userId?: string) => {
       userId: userId || null,
       storeId: orderData.storeId,
       total_price: totalPrice,
-      status: 'Pesanan Baru',
+      status: 'Belum Dibayar',
       payment_status: 'Belum Dibayar',
       payment_method: orderData.payment_method ?? null,
-      origin_contact_name: orderData.origin_contact_name || '',
-      origin_contact_phone: orderData.origin_contact_phone || '',
-      origin_address: orderData.origin_address || '',
-      origin_postal_code: String(orderData.origin_postal_code) || '',
+      origin_contact_name: store?.user.name || '',
+      origin_contact_phone: store?.user.phone || '',
+      origin_address: store?.locations[0]?.address || '',
+      origin_postal_code: String(store?.locations[0]?.postal_code) || '',
       destination_contact_name: orderData.destination_contact_name || '',
       destination_contact_phone: orderData.destination_contact_phone || '',
       destination_address: orderData.destination_address || '',
       destination_postal_code: String(orderData.destination_postal_code) || '',
       courierId: orderData.courierId,
+      rate_courier: orderData.rate_courier,
       created_at: new Date(),
       updated_at: new Date(),
       order_items: {
@@ -120,150 +140,13 @@ export const createOrder = async (orderData: any, userId?: string) => {
           variant: true,
         },
       },
+      store: true,
       courier: true,
     },
   });
 
   return order;
 };
-
-// export const createOrder = async (orderData: any, userId?: string) => {
-//   let user = null;
-
-//   if (!userId) {
-//     user = await createGuestUser(orderData.destination_contact_name);
-//     userId = user.id;
-//   }
-
-//   let totalPrice = 0;
-
-//   const orderItemsData = await Promise.all(
-//     orderData.order_items.map(async (item: any) => {
-//       const product = await prisma.products.findUnique({
-//         where: { id: item.productId },
-//         select: {
-//           price: true,
-//           weight: true,
-//           name: true,
-//           description: true,
-//           categories: {
-//             include: {
-//               category: true,
-//             },
-//           },
-//         },
-//       });
-
-//       if (!product) {
-//         throw new Error(`Product with ID ${item.productId} not found`);
-//       }
-
-//       const itemTotalPrice = product.price * item.qty;
-//       totalPrice += itemTotalPrice;
-
-//       return {
-//         productId: item.productId,
-//         variantOptionValueId: item.variantOptionValueId ?? null,
-//         qty: item.qty,
-//         price: product.price,
-//         weight: product.weight,
-//         name: product.name,
-//         description: product.description,
-//         categories: product.categories,
-//         height: item.height ?? null,
-//         length: item.length ?? null,
-//         width: item.width ?? null,
-//       };
-//     }),
-//   );
-
-//   const existingCourier = await prisma.couriers.findUnique({
-//     where: { id: orderData.courierId },
-//   });
-
-//   if (!existingCourier) {
-//     throw new Error(`Courier with ID ${orderData.courierId} not found`);
-//   }
-
-//   // const invoice = await prisma.invoices.create({
-//   //   data: {
-//   //     id: uuidv4(),
-//   //     prices: totalPrice,
-//   //     service_charge: orderData.service_charge ?? 0,
-//   //     status: 'Belum Dibayar',
-//   //     reciver_longitude: orderData.receiver_longitude ?? null,
-//   //     receiver_latitude: orderData.receiver_latitude ?? null,
-//   //     receiver_district: orderData.receiver_district ?? null,
-//   //     receiver_phone: orderData.destination_contact_phone
-//   //       ? parseInt(orderData.destination_contact_phone)
-//   //       : null,
-//   //     receiver_address: orderData.destination_address ?? null,
-//   //     receiver_name: orderData.destination_contact_name ?? null,
-//   //     invoice_number: `INV-${Date.now()}`,
-//   //     cartId: orderData.cartId ?? null,
-//   //     paymentId: orderData.paymentId,
-//   //     courierId: orderData.courierId,
-//   //     userId: userId,
-//   //   },
-//   // });
-
-//   const order = await prisma.orders.create({
-//     data: {
-//       order_number: `ORD-${Date.now()}`,
-//       userId: userId || null,
-//       storeId: orderData.storeId,
-//       invoicesId: invoice.id,
-//       total_price: totalPrice,
-//       status: 'Pesanan Baru',
-//       payment_status: 'Belum Dibayar',
-//       payment_method: orderData.payment_method ?? null,
-//       origin_contact_name: orderData.origin_contact_name || '',
-//       origin_contact_phone: orderData.origin_contact_phone || '',
-//       origin_address: orderData.origin_address || '',
-//       origin_postal_code: String(orderData.origin_postal_code) || '',
-//       destination_contact_name: orderData.destination_contact_name || '',
-//       destination_contact_phone: orderData.destination_contact_phone || '',
-//       destination_address: orderData.destination_address || '',
-//       destination_postal_code: String(orderData.destination_postal_code) || '',
-//       courierId: orderData.courierId,
-//       created_at: new Date(),
-//       updated_at: new Date(),
-//       order_items: {
-//         create: orderItemsData.map((item: any) => ({
-//           qty: item.qty,
-//           price: item.price,
-//           weight: item.weight,
-//           height: item.height,
-//           length: item.length,
-//           width: item.width,
-//           product: {
-//             connect: { id: item.productId },
-//           },
-//         })),
-//       },
-//     },
-//     include: {
-//       order_items: {
-//         include: {
-//           product: {
-//             include: {
-//               categories: {
-//                 include: {
-//                   category: true,
-//                 },
-//               },
-//             },
-//           },
-//           variant: true,
-//         },
-//       },
-//       courier: true,
-//       invoices: true,
-//     },
-//   });
-
-//   return order;
-// };
 
 export const updateOrderWithTracking = async (
   orderId: string,
@@ -273,7 +156,7 @@ export const updateOrderWithTracking = async (
     where: { id: orderId },
     data: {
       tracking_number: trackingNumber,
-      status: 'processed',
+      status: 'Pesanan Baru',
     },
   });
 };
@@ -287,6 +170,7 @@ export const getOrdersByStoreId = async (storeId: string) => {
           product: true,
         },
       },
+      store: true,
       user: true,
       courier: true,
       invoices: true,

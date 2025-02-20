@@ -26,3 +26,7 @@ export const fetchStoreWithProducts = async (domain: string) => {
 export const getStoreDomainByUserId = async (userId: string) => {
   return await storeRepository.getStoreDomainByUserIdRepo(userId);
 };
+
+export const getStoreLogoByDomain = async (domain: string) => {
+  return await storeRepository.getStoreLogoByDomainRepo(domain);
+};
