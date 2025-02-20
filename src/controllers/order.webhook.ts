@@ -9,11 +9,11 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
     console.log('Webhook received:', req.body);
 
     if (!req.body || Object.keys(req.body).length === 0) {
-      res
+       res
         .status(200)
         .json({ success: true, message: 'Webhook installed successfully' });
-      return;
-    }
+    return
+      }
 
     const {
       order_id,
@@ -203,9 +203,10 @@ export const midtransWebhookTest = async (req: Request, res: Response) => {
     console.log('Signature Key:', notification.signature_key);
     console.log('===============================');
 
-    return res.status(200).json({ success: true, message: 'Webhook received' });
+     res.status(200).json({ success: true, message: 'Webhook received' });
   } catch (error) {
     console.error('Webhook Error:', error);
-    return res.status(500).json({ error: 'Failed to process webhook' });
+     res.status(500).json({ error: 'Failed to process webhook' });
+     return
   }
 };

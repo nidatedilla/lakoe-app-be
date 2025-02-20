@@ -69,7 +69,7 @@ export const loginUser = async (LoginDTO: LoginSchema) => {
   const isMatch = await bcrypt.compare(password, user.password)
 
   if(!isMatch){
-    throw new Error('password is incorrect');
+    throw new Error('Email or password is incorrect');
   }
 
   const token = jwt.sign(

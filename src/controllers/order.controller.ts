@@ -202,7 +202,18 @@ export const getTotalRevenueByStoreHandler = async (
     }
 
     const totalRevenue = await getTotalRevenueByStore(userId);
-    res.json({ totalRevenue });
+
+    const updatedUser = await prisma.users.findUnique({
+      where: { id: userId },
+      select: {
+        balance: true
+      }
+    });
+    res.json({ 
+      totalRevenue,
+      updatedBalance: updatedUser?.balance 
+    });
+
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch total revenue' });
   }
