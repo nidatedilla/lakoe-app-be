@@ -1,33 +1,14 @@
 // src/seed.ts
 import { PrismaClient } from '@prisma/client';
-import seedCouriers from './seeders/courier-seeder';
-import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding admin...");
-  
-  const hashedPassword = await bcrypt.hash('admin123', 10);
-
   console.log('Seeder roles berhasil dijalankan!');
+
   console.log("Seeding categories...");
 
-  const admin = await prisma.users.upsert({
-    where: { email: 'admin@lakoe.com' },
-    update: {},
-    create: {
-      email: 'admin@lakoe.com',
-      password: hashedPassword,
-      name: 'Admin Lakoe',
-      phone: '08123456789',
-      role: 'ADMIN',
-    },
-  });
-
-  console.log('Admin seeded:', admin);
-
-
+  // Seed data kategori dengan struktur tiga level untuk tampilan multikolom
   const categories = await prisma.categories.createMany({
     data: [
       // Main Categories
@@ -106,16 +87,12 @@ async function main() {
   });
 
   console.log("Categories seeded:", categories);
-
-  await seedCouriers(prisma);
-
-  console.log('Semua seeder berhasil dijalankan!');
 }
 
 main()
   .catch((e) => {
     console.error(e);
-     process.exit(1);
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();

@@ -82,3 +82,20 @@ export const findProductByName = async (name: string) => {
     where: { name: { contains: name, mode: 'insensitive' } },
   });
 };
+
+export const updateVariantRepository = async (
+  productId: string,
+  variantId: string,
+  updatedData: { price: number; stock: number },
+) => {
+  return await prisma.variants.update({
+    where: {
+      id: variantId,
+      productId: productId,
+    },
+    data: {
+      price: updatedData.price,
+      stock: updatedData.stock,
+    },
+  });
+};
