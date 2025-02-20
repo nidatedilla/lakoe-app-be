@@ -59,7 +59,7 @@ export const createProductController = async (req: Request, res: Response) => {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-    const storeId = findUniqueUserById.stores?.id || '';
+    const storeId = (findUniqueUserById as any).stores?.id || '';
 
     // Parsing data variant (bisa berupa string JSON atau objek)
     let variantData: any[] = [];
@@ -205,5 +205,36 @@ export const getProductsByIsActiveController = async (
     res.status(500).json({
       message: (error as Error).message,
     });
+  }
+};
+
+export const getVariantsByProductIdController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const { productId } = req.params; // pastikan parameter route dinamakan productId
+    const variants =
+      await productService.getVariantsByProductIdService(productId);
+    res.status(200).json(variants);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+};
+
+export const updateVariantController = async (req: Request, res: Response) => {
+  try {
+    const { productId, variantId } = req.params;
+    const { price, stock } = req.body;
+    const updatedVariant = await productService.updateVariantService(
+      productId,
+      variantId,
+      { price, stock },
+    );
+    res.status(200).json(updatedVariant);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: (error as Error).message });
   }
 };
