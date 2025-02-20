@@ -22,17 +22,24 @@ model profiles {
 }
 
 model users {
-  id       String     @id @unique @default(cuid())
-  name     String
-  email    String     @unique
-  phone    String     @unique
-  password String
-  role     String?
-  profile  profiles?
-  stores   stores?
-  invoices invoices[]
-  payments payments[]
-  orders   orders[]
+  id               String             @id @unique @default(cuid())
+  name             String
+  email            String             @unique
+  phone            String             @unique
+  password         String
+  role             String?
+  profile          profiles?
+  balance          Int                @default(0)
+  stores           stores?
+  invoices         invoices[]
+  payments         payments[]
+  orders           orders[]
+  payment_requests payment_requests[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt()
+
+  bank_accounts bank_accounts?
 }
 
 model stores {
@@ -45,25 +52,45 @@ model stores {
   slogan                String?
   userId                String                  @unique
   user                  users                   @relation(fields: [userId], references: [id])
-  bank_accounts         bank_accounts[]
+  bank_accounts         bank_accounts?
   products              products[]
   operation_hours       operation_hours[]
   message_templates     message_templates[]
   locations             locations[]
   stores_in_decorations stores_in_decorations[]
   orders                orders[]
+  payment_requests      payment_requests[]
+
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt()
+}
+
+model payment_requests {
+  id       String @id @unique @default(cuid())
+  sellerId String 
+  status   String
+  storeId  String
+  amount   Int
+
+  store  stores @relation(fields: [storeId], references: [id])
+  seller users  @relation(fields: [sellerId], references: [id])
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt()
 }
 
 model orders {
-  id                        String        @id @unique @default(cuid())
+  id                        String             @id @unique @default(cuid())
   order_number              String?
-  user                      users?        @relation(fields: [userId], references: [id])
+  user                      users?             @relation(fields: [userId], references: [id])
   userId                    String?
-  store                     stores        @relation(fields: [storeId], references: [id])
+  store                     stores             @relation(fields: [storeId], references: [id])
   storeId                   String
   total_price               Int
-  status                    String        @default("Belum Dibayar")
-  payment_status            String        @default("Belum Dibayar")
+  status                    String             @default("Belum Dibayar")
+  payment_status            String             @default("Belum Dibayar")
   payment_method            String?
   origin_contact_name       String
   origin_contact_phone      String
@@ -73,7 +100,7 @@ model orders {
   destination_contact_phone String
   destination_address       String
   destination_postal_code   String
-  courier                   couriers?     @relation(fields: [courierId], references: [id])
+  courier                   couriers?          @relation(fields: [courierId], references: [id])
   courierId                 String?
   rate_courier              Int?
   tracking_number           String?
@@ -83,7 +110,7 @@ model orders {
   created_at                DateTime      @default(now())
   updated_at                DateTime      @updatedAt
   order_items               order_items[]
-  invoices                  invoices?     @relation(fields: [invoicesId], references: [id])
+  invoices                  invoices?          @relation(fields: [invoicesId], references: [id])
   invoicesId                String?
 }
 
@@ -106,10 +133,12 @@ model order_items {
 model bank_accounts {
   id       String @id @unique @default(cuid())
   bank     String
-  acc_num  Int
+  userId String @unique
+  acc_num  String
   acc_name String
+  user    users  @relation(fields: [userId], references: [id])
   store    stores @relation(fields: [storeId], references: [id])
-  storeId  String
+  storeId  String @unique
 }
 
 model products {
