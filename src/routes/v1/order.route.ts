@@ -9,6 +9,8 @@ import {
   getOrder,
   getOrderById,
   getStoreOrders,
+  getTotalOrdersTodayByStoreHandler,
+  getTotalRevenueByStoreHandler,
 } from '../../controllers/order.controller';
 import { auth } from '../../middlewares/auth.middlewere';
 import { createBiteshipOrder } from '../../services/biteship.service';
@@ -16,6 +18,8 @@ import { createBiteshipOrder } from '../../services/biteship.service';
 const orderRouter = Router();
 
 orderRouter.get('/', auth, getStoreOrders);
+orderRouter.get('/total-revenue', auth, getTotalRevenueByStoreHandler);
+orderRouter.get('/today', auth, getTotalOrdersTodayByStoreHandler);
 orderRouter.get('/:orderId', auth, getOrder);
 orderRouter.get('/tracking/:orderId', getOrderById);
 orderRouter.post('/create', createOrder);

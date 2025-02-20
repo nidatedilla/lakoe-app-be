@@ -1,5 +1,6 @@
 // src/seed.ts
 import { PrismaClient } from '@prisma/client';
+import seedCouriers from './seeders/courier-seeder';
 
 const prisma = new PrismaClient();
 
@@ -87,6 +88,10 @@ async function main() {
   });
 
   console.log("Categories seeded:", categories);
+
+  await seedCouriers(prisma);
+
+  console.log('Semua seeder berhasil dijalankan!');
 }
 
 main()

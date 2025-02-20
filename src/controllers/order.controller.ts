@@ -5,6 +5,8 @@ import {
   getCourierRates,
   getOrderByIdService,
   getOrdersByStore,
+  getTotalOrdersTodayByStore,
+  getTotalRevenueByStore,
 } from '../services/order.service';
 import prisma from '../utils/prisma';
 
@@ -119,11 +121,14 @@ export const fetchCourierRates = async (
       courierCodes,
     );
 
-    console.log('Biteship API Response:', JSON.stringify(response, null, 2));
+    console.log(
+      'Biteship API Response:',
+      JSON.stringify(responseData, null, 2),
+    );
 
-    const formattedRates = response.pricing
+    const formattedRates = responseData.pricing
       .map((courier: any) => {
-        console.log('Pricing from Biteship:', response.pricing);
+        console.log('Pricing from Biteship:', responseData.pricing);
         console.log('Courier from Biteship:', courier);
         console.log('Matching selected couriers:', selectedCouriers);
 
@@ -180,5 +185,44 @@ export const getOrderById = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getTotalRevenueByStoreHandler = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const userId = res.locals.user.id;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ error: 'Unauthorized, please login first' });
+    }
+
+    const totalRevenue = await getTotalRevenueByStore(userId);
+    res.json({ totalRevenue });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch total revenue' });
+  }
+};
+
+export const getTotalOrdersTodayByStoreHandler = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const userId = res.locals.user.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized, store not found' });
+    }
+
+    const totalOrdersToday = await getTotalOrdersTodayByStore(userId);
+    res.json({ totalOrdersToday });
+  } catch (error) {
+    console.error('Error fetching total orders today:', error);
+    res.status(500).json({ error: 'Failed to fetch total orders today' });
   }
 };
