@@ -23,22 +23,9 @@ export const createNewOrder = async (orderData: any) => {
 
   const order = await createOrder(orderData, userId);
 
-  const updatedOrderData = {
-    ...orderData,
-    order_items: order.order_items.map((item: any) => ({
-      ...item,
-      product: {
-        ...item.product,
-        categories: item.product.categories,
-      },
-    })),
-  };
- 
-  const biteshipResponse = await createBiteshipOrder(updatedOrderData);
+  const midtransTransaction = await createMidtransTransaction(order);
 
-  await updateOrderWithTracking(order.id, biteshipResponse.id);
-
-  return { order, biteshipResponse };
+  return { order, midtransTransaction };
 };
 
 export const getOrdersByStore = async (storeId: string) => {
@@ -125,8 +112,8 @@ export const getTotalRevenueByStore = async (
   await prisma.users.update({
     where: { id: userId },
     data: {
-      balance: revenue
-    }
+      balance: revenue,
+    },
   });
 
   return revenue;
