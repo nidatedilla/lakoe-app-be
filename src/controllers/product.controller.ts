@@ -7,7 +7,7 @@ export const getProductController = async (req: Request, res: Response) => {
     const getAllProduct = await productService.getAllProductsService();
     res.status(200).json(getAllProduct);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
@@ -20,7 +20,7 @@ export const getProductByIdController = async (req: Request, res: Response) => {
     const product = await productService.getProductByIdService(id);
     res.status(200).json(product);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
@@ -34,35 +34,34 @@ export const createProductController = async (req: Request, res: Response) => {
     let {
       name,
       description,
-      size,
       minimum_order,
       url,
       stock,
       price,
       weight,
-      attachments,
+      attachments, // Dikirim sebagai JSON string (array foto)
       categoryId,
       sku,
       variant,
+      length, // Dimensi produk
+      width,
+      height,
     } = req.body;
 
     const file = req.file as Express.Multer.File;
 
     const findUniqueUserById = await getUniqueUserByIdRepository(userId);
-
     if (!findUniqueUserById) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-
     if (findUniqueUserById.id !== userId) {
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-
     const storeId = findUniqueUserById.stores?.id || '';
 
-    // Parsing data variant yang dikirim dari frontend (bisa berupa string JSON)
+    // Parsing data variant (bisa berupa string JSON atau objek)
     let variantData: any[] = [];
     if (variant) {
       if (typeof variant === 'string') {
@@ -71,11 +70,8 @@ export const createProductController = async (req: Request, res: Response) => {
         variantData = variant;
       }
     }
-
-    // Pastikan data varian hanya memiliki field yang didefinisikan di model variants.
-    // Misalnya, jika ada properti "name", kita hapus atau abaikan.
     const transformedVariantData = variantData.map((v) => ({
-      combination: v.combination, // Harus berupa objek atau JSON
+      combination: v.combination,
       price: parseInt(v.price, 10),
       sku: v.sku,
       stock: parseInt(v.stock, 10),
@@ -83,14 +79,24 @@ export const createProductController = async (req: Request, res: Response) => {
       photo: v.photo,
     }));
 
+    // Gabungkan dimensi produk ke dalam objek JSON untuk field "size"
+    const sizeJson = JSON.stringify({
+      length: parseInt(length, 10),
+      width: parseInt(width, 10),
+      height: parseInt(height, 10),
+    });
+
+    // Parsing attachments jika ada
+    const attachmentsParsed = attachments ? JSON.parse(attachments) : null;
+
     // Buat object product
     const product = {
       name,
       description,
       url,
-      size: parseInt(size, 10),
+      size: sizeJson,
       minimum_order: parseInt(minimum_order, 10),
-      attachments,
+      attachments: attachmentsParsed,
       storeId,
       sku,
       weight: parseInt(weight, 10),
@@ -108,10 +114,9 @@ export const createProductController = async (req: Request, res: Response) => {
       categoryId,
       file,
     );
-
     res.status(201).json(newProduct);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
@@ -161,7 +166,7 @@ export const updateProductController = async (req: Request, res: Response) => {
 
     res.status(200).json(updatedProduct);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
@@ -176,14 +181,15 @@ export const deleteProductController = async (req: Request, res: Response) => {
 
     res
       .status(204)
-      .json({ message: 'product deleted successfully', deleteProduct });
+      .json({ message: 'Product deleted successfully', deleteProduct });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
   }
 };
+
 export const getProductsByIsActiveController = async (
   req: Request,
   res: Response,
@@ -195,7 +201,7 @@ export const getProductsByIsActiveController = async (
     );
     res.status(200).json(products);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: (error as Error).message,
     });
