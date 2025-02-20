@@ -66,6 +66,12 @@ export const getSelectedCouriers = async (req: Request, res: Response) => {
 //   try {
 //     const { origin_area_id, destination_area_id, couriers, items } = req.body;
 
+    // if (!origin_area_id || !destination_area_id || !couriers || !items) {
+    //   res
+    //     .status(400)
+    //     .json({ success: false, message: 'Missing required fields' });
+    //   return;
+    // }
 //     if (!origin_area_id || !destination_area_id || !couriers || !items) {
 //       return res
 //         .status(400)
@@ -79,6 +85,13 @@ export const getSelectedCouriers = async (req: Request, res: Response) => {
 //       items,
 //     );
 
+//     res.status(200).json({ success: true, rates });
+//   } catch (error: any) {
+//     console.error('Error in getCourierRates:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//     return;
+//   }
+// };
 //     return res.status(200).json({ success: true, rates });
 //   } catch (error: any) {
 //     console.error('Error in getCourierRates:', error);

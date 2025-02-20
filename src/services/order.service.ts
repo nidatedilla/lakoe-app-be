@@ -8,6 +8,7 @@ import {
   getSellerAreaId,
   updateOrderWithTracking,
 } from '../repositories/order.repository';
+import { createBiteshipOrder } from './biteship.service';
 import { BITESHIP_API_KEY, BITESHIP_BASE_URL } from '../config/biteship';
 import { createMidtransTransaction } from '../controllers/transaction.controller';
 import prisma from '../utils/prisma';
@@ -22,9 +23,22 @@ export const createNewOrder = async (orderData: any) => {
 
   const order = await createOrder(orderData, userId);
 
-  const midtransTransaction = await createMidtransTransaction(order);
+  const updatedOrderData = {
+    ...orderData,
+    order_items: order.order_items.map((item: any) => ({
+      ...item,
+      product: {
+        ...item.product,
+        categories: item.product.categories,
+      },
+    })),
+  };
+ 
+  const biteshipResponse = await createBiteshipOrder(updatedOrderData);
 
-  return { order, midtransTransaction };
+  await updateOrderWithTracking(order.id, biteshipResponse.id);
+
+  return { order, biteshipResponse };
 };
 
 export const getOrdersByStore = async (storeId: string) => {
@@ -106,7 +120,16 @@ export const getTotalRevenueByStore = async (
     },
   });
 
-  return totalRevenue._sum.total_price || 0;
+  const revenue = totalRevenue._sum.total_price || 0;
+
+  await prisma.users.update({
+    where: { id: userId },
+    data: {
+      balance: revenue
+    }
+  });
+
+  return revenue;
 };
 
 export const getTotalOrdersTodayByStore = async (
