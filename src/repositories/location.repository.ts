@@ -78,7 +78,8 @@ export const deleteLocationRepository = async (id: string) => {
 };
 
 export const getAllLocationRepository = async () => {
-  return await prisma.locations.findMany();
+  return await prisma.locations.findMany({
+  });
 };
 
 export const getUniqueLocationRepository = async (id: string) => {
@@ -117,6 +118,9 @@ export const findUniqueLoactionById = async (id: string) => {
 export const findAllLocationByUserRepository = async (storeId: string) => {
   return await prisma.locations.findMany({
     where: { id: storeId },
+    orderBy: {
+      is_main_location : "desc"
+    }
   });
 };
 
@@ -125,3 +129,21 @@ export const findGuestLocation = async (guestId: string) => {
     where: { guestId },
   });
 };
+
+export const updateManyMainLocation = async (storeId: string) => {
+  return await prisma.locations.updateMany({
+    where: {storeId},
+    data:{
+      is_main_location: false
+    }
+  })
+}
+
+export const updateIsmainLocation = async ( id: string, is_main_location: boolean) => {
+  return await prisma.locations.update({
+    where: {id},
+    data: {
+      is_main_location: is_main_location
+    }
+  })
+}
