@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import * as locationRepository from '../repositories/location.repository';
 import * as storeRepository from '../repositories/store.repository';
 import { searchAreasFromBiteship } from '../repositories/area.repository';
+import { getMeRepository } from '../repositories/user.repository';
 
 const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY;
 const BITESHIP_API_URL = 'https://api.biteship.com/v1/locations';
@@ -26,7 +27,7 @@ export const getAllLocationController = async (req: Request, res: Response) => {
 };
 
 export const createLocationController = async (req: Request, res: Response) => {
-  const userId = res.locals.user.id;
+
 
   const {
     name,
@@ -64,12 +65,11 @@ export const createLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-       res
+      res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
-        return
+      return;
     }
-    
 
     const area_id = areaSearchResult.areas[0].id;
 
@@ -121,7 +121,7 @@ export const createLocationController = async (req: Request, res: Response) => {
       villages,
       latitude: latitude.toString(),
       longitude: longitude.toString(),
-      is_main_location: isExsitingLocation ? false : true,
+      is_main_location: is_main_location,
       storeId,
       profileId,
       contact_name: nameContact,
@@ -158,6 +158,43 @@ export const getUniqueLocationController = async (
   }
 };
 
+export const updateIsMainLocation = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const  userId  =  res.locals.user.id;
+  const { is_main_location } = req.body;
+
+  console.log("userID",userId)
+  try {
+
+    if (!userId) {
+      res.status(400).json({ message: 'user id is undefined' });
+      return
+   }
+    const updateLocationToFalse = await getMeRepository(userId);
+
+    const storeId = updateLocationToFalse?.stores?.id;
+
+    if (!storeId) {
+       res.status(400).json({ message: 'Store id is undefined' });
+       return
+    }
+
+    if (is_main_location) {
+      await locationRepository.updateManyMainLocation(storeId);
+    }
+
+    const updateMainLocation = await locationRepository.updateIsmainLocation(
+      id,
+      is_main_location,
+    );
+
+    res.status(201).json(updateMainLocation);
+  } catch (error: any) {
+    console.error('Error fetching location:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateLocationController = async (req: Request, res: Response) => {
   const { id } = req.params;
   const {
@@ -177,6 +214,8 @@ export const updateLocationController = async (req: Request, res: Response) => {
     contact_phone,
     type,
     guestId,
+    createdAt,
+    updatedAt,
   } = req.body;
 
   try {
@@ -202,10 +241,10 @@ export const updateLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-       res
+      res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
-        return
+      return;
     }
 
     const area_id = areaSearchResult.areas[0].id;
@@ -319,10 +358,10 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-       res
+      res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
-        return
+      return;
     }
 
     const area_id = areaSearchResult.areas[0].id;
@@ -333,7 +372,7 @@ export const createBuyerLocation = async (req: Request, res: Response) => {
       postal_code,
       latitude: parseFloat(latitude),
       longitude: parseFloat(longitude),
-      is_main_location: true,
+      is_main_location: is_main_location,
       contact_name,
       contact_phone,
       type,

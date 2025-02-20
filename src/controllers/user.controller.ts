@@ -1,11 +1,11 @@
-import { getUsersRepository } from '../repositories/user.repository';
+import { Prisma } from "@prisma/client";
 import { Request, Response } from 'express';
-import * as userService from '../services/user.service';
 import {
   findUniqueStoreByIdRepository,
-  findUniqueStoreRepository,
-  uniqueStoreByName,
+  uniqueStoreByName
 } from '../repositories/store.repository';
+import { getUsersRepository } from '../repositories/user.repository';
+import * as userService from '../services/user.service';
 
 export const getUsersController = async (req: Request, res: Response) => {
   try {
@@ -62,7 +62,7 @@ export const updateUserController = async (req: Request, res: Response) => {
   }
 };
 
-import { Prisma } from "@prisma/client";
+
 
 export const updateStoreSellerController = async (req: Request, res: Response) => {
   const id = res.locals.user.id;
