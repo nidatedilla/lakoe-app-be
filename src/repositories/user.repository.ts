@@ -17,6 +17,7 @@ export const registerUserRepository = async (user: users) => {
       email: user.email,
       password: user.password,
       name: user.name,
+      balance: user.balance,
       phone: user.phone,
       role: user.role || 'Seller',
     },
@@ -130,6 +131,7 @@ export const getUniqueUserByIdRepository = async (id: string) => {
     where: { id },
     include: {
       stores: true,
+      bank_accounts: true
     },
   });
 };
@@ -142,6 +144,7 @@ export const getMeRepository = async (id: string) => {
       email: true,
       role: true,
       name: true,
+      balance: true,
       phone: true,
       profile: true,
       stores: {
@@ -155,7 +158,12 @@ export const getMeRepository = async (id: string) => {
           slogan: true,
           userId: true,
           products: true,
-          locations: true,
+          locations: {
+            orderBy :{
+              is_main_location : "desc"
+            }
+          },
+          bank_accounts: true,
           _count: {
             select: {
               products: true,
