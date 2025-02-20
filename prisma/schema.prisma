@@ -231,6 +231,8 @@ model couriers {
   orders                           orders[]
   invoices                         invoices[]
   is_selected                      Boolean    @default(false)
+
+  @@unique([courier_code, courier_service_code])
 }
 
 model operation_hours {

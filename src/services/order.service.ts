@@ -10,6 +10,7 @@ import {
 } from '../repositories/order.repository';
 import { BITESHIP_API_KEY, BITESHIP_BASE_URL } from '../config/biteship';
 import { createMidtransTransaction } from '../controllers/transaction.controller';
+import prisma from '../utils/prisma';
 
 export const createNewOrder = async (orderData: any) => {
   let userId = orderData.userId;
@@ -81,4 +82,61 @@ export const getCourierRates = async (
   );
 
   return response.data;
+};
+
+export const getTotalRevenueByStore = async (
+  userId: string,
+): Promise<number> => {
+  const store = await prisma.stores.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!store) {
+    throw new Error('User does not own any store');
+  }
+
+  const totalRevenue = await prisma.orders.aggregate({
+    _sum: {
+      total_price: true,
+    },
+    where: {
+      status: 'Pesanan Selesai',
+      storeId: store.id,
+    },
+  });
+
+  return totalRevenue._sum.total_price || 0;
+};
+
+export const getTotalOrdersTodayByStore = async (
+  userId: string,
+): Promise<number> => {
+  const store = await prisma.stores.findFirst({
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!store) {
+    return 0;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const totalOrdersToday = await prisma.orders.count({
+    where: {
+      storeId: store.id,
+      status: 'Pesanan Selesai',
+      created_at: {
+        gte: today,
+        lt: tomorrow,
+      },
+    },
+  });
+
+  return totalOrdersToday;
 };

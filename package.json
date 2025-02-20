@@ -8,9 +8,12 @@
     "build": "tsc --listFiles",
     "prepare": "husky",
     "lint": "eslint --fix",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && prisma migrate deploy && prisma db seed",
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "node src/swagger.ts/",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
