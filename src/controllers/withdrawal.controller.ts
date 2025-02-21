@@ -3,6 +3,35 @@ import * as reqPaymentRepository from '../repositories/withdrawal.repository';
 import { getUniqueUserByIdRepository } from '../repositories/user.repository';
 import prisma from '../utils/prisma';
 
+
+export const getUserWithdrawalsController = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const withdrawals = await prisma.payment_requests.findMany({
+      where: { 
+        sellerId: userId 
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        store: {
+          select: {
+            name: true,
+            bank_accounts: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json(withdrawals);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createReqPaymentController = async (
   req: Request,
   res: Response,
@@ -35,10 +64,11 @@ export const createReqPaymentController = async (
 
     const data = {
       id: '',
-      storeId,
-      sellerId,
+      storeId: String(storeId),
+      sellerId: String(sellerId),
       status: 'Pending',
-      amount,
+      amount: Number(amount),
+      message: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -315,30 +345,6 @@ export const updateStatusToSuccessReqPaymentController = async (
   const { id } = req.params;
 
   try {
-    const withdrawRequest = await prisma.payment_requests.findUnique({
-      where: { id },
-    });
-
-    if (!withdrawRequest) {
-      res.status(400).json({ message: 'Withdraw request not found' });
-      return;
-    }
-
-    const sellerBalance = await prisma.users.findUnique({
-      where: { id: withdrawRequest.sellerId },
-    });
-
-    if (!sellerBalance) {
-      res.status(400).json({ message: 'Seller not found' });
-      return;
-    }
-
-    await prisma.users.update({
-      where: { id: withdrawRequest.sellerId },
-      data: {
-        balance: sellerBalance.balance - withdrawRequest.amount,
-      },
-    });
 
     const updateStatusToSuccess =
       await reqPaymentRepository.updatedeStatusToSuccessReqPaymentRepository(
