@@ -15,5 +15,6 @@ reqPaymentRouter.get('/search-pending', reqPaymentController.searchPendingReqPay
 reqPaymentRouter.get('/search-processing', reqPaymentController.searchProcessingReqPaymentsController)
 reqPaymentRouter.get('/search-success', reqPaymentController.searchSuccessReqPaymentsController)
 reqPaymentRouter.get('/search-rejected', reqPaymentController.searchRejectedReqPaymentsController)
+reqPaymentRouter.get("/user/:userId", reqPaymentController.getUserWithdrawalsController);
 
 export default reqPaymentRouter

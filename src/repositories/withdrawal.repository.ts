@@ -8,6 +8,7 @@ export const createReqPaymentRepository = async (payment: payment_requests) => {
       storeId: payment.storeId,
       sellerId: payment.sellerId,
       amount: payment.amount,
+      message: "Permintaan pencairan dana sedang dalam antrean dan akan segera diproses oleh admin."
     },
   });
 };
@@ -287,6 +288,7 @@ export const updateStatusToRejectedReqPaymentRepository = async (
     where: { id },
     data: {
       status: 'Rejected',
+      message: "Permintaan pencairan dana ditolak oleh admin. Silakan hubungi support untuk informasi lebih lanjut."
     },
   });
 };
@@ -297,6 +299,7 @@ export const updatedeStatusToProcessingReqPaymentRepository = async (
     where: { id },
     data: {
       status: 'Processing',
+      message: "Permintaan pencairan dana Anda sedang diproses. Mohon tunggu beberapa saat."
     },
   });
 };
@@ -310,6 +313,7 @@ export const updatedeStatusToSuccessReqPaymentRepository = async (
     },
     data: {
       status: 'Success',
+      message: "Permintaan pencairan dana telah disetujui dan dana telah ditransfer ke akun Bank Anda."
     },
   });
 };
