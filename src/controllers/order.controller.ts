@@ -3,10 +3,10 @@ import { getSelectedCouriers } from '../repositories/courier.repository';
 import {
   createNewOrder,
   getCourierRates,
+  getNewRevenueByStore,
   getOrderByIdService,
   getOrdersByStore,
   getTotalOrdersTodayByStore,
-  getTotalRevenueByStore,
 } from '../services/order.service';
 import prisma from '../utils/prisma';
 
@@ -201,21 +201,20 @@ export const getTotalRevenueByStoreHandler = async (
         .json({ error: 'Unauthorized, please login first' });
     }
 
-    const totalRevenue = await getTotalRevenueByStore(userId);
+    const newRevenue = await getNewRevenueByStore(userId);
 
     const updatedUser = await prisma.users.findUnique({
       where: { id: userId },
-      select: {
-        balance: true
-      }
-    });
-    res.json({ 
-      totalRevenue,
-      updatedBalance: updatedUser?.balance 
+      select: { balance: true, last_total_revenue: true },
     });
 
+    res.json({
+      newRevenue,
+      updatedBalance: updatedUser?.balance,
+      lastTotalRevenue: updatedUser?.last_total_revenue,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch total revenue' });
+    res.status(500).json({ message: 'Failed to fetch new revenue' });
   }
 };
 

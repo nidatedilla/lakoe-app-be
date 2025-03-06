@@ -22,19 +22,20 @@ model profiles {
 }
 
 model users {
-  id               String             @id @unique @default(cuid())
-  name             String
-  email            String             @unique
-  phone            String             @unique
-  password         String
-  role             String?
-  profile          profiles?
-  balance          Int                @default(0)
-  stores           stores?
-  invoices         invoices[]
-  payments         payments[]
-  orders           orders[]
-  payment_requests payment_requests[]
+  id                 String             @id @unique @default(cuid())
+  name               String
+  email              String             @unique
+  phone              String             @unique
+  password           String
+  role               String?
+  profile            profiles?
+  balance            Int                @default(0)
+  last_total_revenue Int?
+  stores             stores?
+  invoices           invoices[]
+  payments           payments[]
+  orders             orders[]
+  payment_requests   payment_requests[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt()
@@ -66,7 +67,7 @@ model stores {
 }
 
 model payment_requests {
-  id       String @id @unique @default(cuid())
+  id       String  @id @unique @default(cuid())
   sellerId String
   status   String
   message  String?
@@ -258,7 +259,7 @@ model couriers {
   shipment_duration_unit           String
   orders                           orders[]
   invoices                         invoices[]
-  is_selected                      Boolean    @default(false)
+  is_selected                      Boolean    @default(true)
 
   @@unique([courier_code, courier_service_code])
 }

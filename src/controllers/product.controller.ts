@@ -4,8 +4,14 @@ import { getUniqueUserByIdRepository } from '../repositories/user.repository';
 
 export const getProductController = async (req: Request, res: Response) => {
   try {
-    const getAllProduct = await productService.getAllProductsService();
-    res.status(200).json(getAllProduct);
+    const userId = res.locals.user.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const userProducts = await productService.getAllProductsService(userId);
+    res.status(200).json(userProducts);
   } catch (error) {
     console.error(error);
     res.status(500).json({

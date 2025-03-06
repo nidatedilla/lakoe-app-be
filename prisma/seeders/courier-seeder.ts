@@ -18,6 +18,7 @@ export default async function seedCouriers(prisma: PrismaClient) {
       shipping_type: 'parcel',
       shipment_duration_range: '6 - 8',
       shipment_duration_unit: 'hours',
+      
     },
     {
       courier_code: 'grab',

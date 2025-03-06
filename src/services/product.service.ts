@@ -3,8 +3,8 @@ import * as productRepository from '../repositories/product.repository';
 import { uploadToCloudinary } from './media.service';
 import { prisma } from '../libs/prisma';
 
-export const getAllProductsService = async () => {
-  return await productRepository.findAllProductRepository();
+export const getAllProductsService = async (userId: string) => {
+  return await productRepository.findAllProductRepository(userId);
 };
 
 export const getProductByIdService = async (id: string) => {

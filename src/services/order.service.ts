@@ -85,9 +85,7 @@ export const getCourierRates = async (
   return response.data;
 };
 
-export const getTotalRevenueByStore = async (
-  userId: string,
-): Promise<number> => {
+export const getNewRevenueByStore = async (userId: string): Promise<number> => {
   const store = await prisma.stores.findFirst({
     where: { userId },
     select: { id: true },
@@ -97,6 +95,15 @@ export const getTotalRevenueByStore = async (
     throw new Error('User does not own any store');
   }
 
+  // Ambil total revenue terakhir yang disimpan di database
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { last_total_revenue: true, balance: true },
+  });
+
+  const lastTotalRevenue = user?.last_total_revenue || 0;
+
+  // Hitung total revenue saat ini
   const totalRevenue = await prisma.orders.aggregate({
     _sum: {
       total_price: true,
@@ -107,16 +114,21 @@ export const getTotalRevenueByStore = async (
     },
   });
 
-  const revenue = totalRevenue._sum.total_price || 0;
+  const currentRevenue = totalRevenue._sum.total_price || 0;
 
-  await prisma.users.update({
-    where: { id: userId },
-    data: {
-      balance: revenue,
-    },
-  });
+  const newRevenue = currentRevenue - lastTotalRevenue;
 
-  return revenue;
+  if (newRevenue > 0) {
+    await prisma.users.update({
+      where: { id: userId },
+      data: {
+        last_total_revenue: currentRevenue,
+        balance: user?.balance ? user.balance + newRevenue : newRevenue,
+      },
+    });
+  }
+
+  return newRevenue;
 };
 
 export const getTotalOrdersTodayByStore = async (
