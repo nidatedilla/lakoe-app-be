@@ -50,7 +50,8 @@ export const createLocationController = async (req: Request, res: Response) => {
       await storeRepository.findUniqueStoreLocationRepository(storeId);
 
     if (!findUniqueStore) {
-      return res.status(400).json({ message: 'Store does not exist!' });
+      res.status(400).json({ message: 'Store does not exist!' });
+      return;
     }
 
     const numPhone = findUniqueStore.user.phone;
@@ -65,9 +66,10 @@ export const createLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-      return res
+      res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
+      return;
     }
 
     const area_id = areaSearchResult.areas[0].id;
@@ -233,7 +235,8 @@ export const updateLocationController = async (req: Request, res: Response) => {
       await locationRepository.findUniqueLoactionById(id);
 
     if (!existingLocation) {
-      return res.status(404).json({ message: 'Location not found' });
+      res.status(404).json({ message: 'Location not found' });
+      return;
     }
 
     const updatedMainLocation = existingLocation.is_main_location
@@ -246,9 +249,10 @@ export const updateLocationController = async (req: Request, res: Response) => {
     );
 
     if (!areaSearchResult || !areaSearchResult.areas?.length) {
-      return res
+      res
         .status(400)
         .json({ message: 'Area ID not found for given postal code' });
+      return;
     }
 
     const area_id = areaSearchResult.areas[0].id;

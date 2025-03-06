@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStoreDomain = exports.getStoreWithProducts = exports.deleteStoreController = exports.updateStoreController = exports.findUniqueStoreController = exports.getStoreController = void 0;
+exports.getLogoStore = exports.getStoreDomain = exports.getStoreWithProducts = exports.deleteStoreController = exports.updateStoreController = exports.findUniqueStoreController = exports.getStoreController = void 0;
 const storeService = __importStar(require("../services/store.service"));
 const store_repository_1 = require("../repositories/store.repository");
 const getStoreController = async (req, res) => {
@@ -121,3 +121,15 @@ const getStoreDomain = async (req, res) => {
     }
 };
 exports.getStoreDomain = getStoreDomain;
+const getLogoStore = async (req, res) => {
+    try {
+        const { domain } = req.params;
+        const storeLogo = await storeService.getStoreLogoByDomain(domain);
+        res.json(storeLogo);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.getLogoStore = getLogoStore;

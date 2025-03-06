@@ -6,7 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createBiteshipOrder = void 0;
 const axios_1 = __importDefault(require("axios"));
 const biteship_1 = require("../config/biteship");
+const prisma_1 = __importDefault(require("../utils/prisma"));
 const createBiteshipOrder = async (orderData) => {
+    const selectedCourier = await prisma_1.default.couriers.findUnique({
+        where: { id: orderData.courierId },
+    });
+    if (!selectedCourier) {
+        throw new Error('Courier not found');
+    }
     const items = await Promise.all(orderData.order_items.map(async (item) => {
         const product = item.product;
         const categories = product?.categories.map((cat) => cat.name).join(', ') || '';
@@ -22,30 +29,22 @@ const createBiteshipOrder = async (orderData) => {
             width: item.width,
         };
     }));
+    const mainLocation = orderData.store.locations?.[0] || {};
     const payload = {
-        shipper_contact_name: orderData.shipper_contact_name || '',
-        shipper_contact_phone: orderData.shipper_contact_phone || '',
-        shipper_contact_email: orderData.shipper_contact_email || '',
-        shipper_organization: orderData.shipper_organization || '',
-        origin_contact_name: orderData.origin_contact_name || '',
-        origin_contact_phone: orderData.origin_contact_phone || '',
-        origin_address: orderData.origin_address || '',
-        origin_note: orderData.origin_note || '',
-        origin_postal_code: String(orderData.origin_postal_code) || '',
+        origin_contact_name: orderData.store.user.name || '',
+        origin_contact_phone: orderData.store.user.phone || '',
+        origin_address: mainLocation.address || '',
+        origin_postal_code: Number(mainLocation.postal_code) || null,
         destination_contact_name: orderData.destination_contact_name || '',
         destination_contact_phone: orderData.destination_contact_phone || '',
-        destination_contact_email: orderData.destination_contact_email || '',
         destination_address: orderData.destination_address || '',
-        destination_postal_code: String(orderData.destination_postal_code) || '',
-        destination_note: orderData.destination_note || '',
-        courier_company: orderData.courier_company || '',
-        courier_type: orderData.courier_type || '',
-        courier_insurance: orderData.courier_insurance || 0,
+        destination_postal_code: Number(orderData.destination_postal_code) || null,
+        courier_company: selectedCourier?.courier_code || '',
+        courier_type: selectedCourier?.courier_service_code || '',
         delivery_type: orderData.delivery_type || 'now',
-        order_note: orderData.order_note || '',
-        metadata: orderData.metadata || {},
         items: items,
     };
+    console.log('Payload dikirim ke Biteship:', payload);
     try {
         const response = await axios_1.default.post(`${biteship_1.BITESHIP_BASE_URL}/v1/orders`, payload, {
             headers: {
@@ -54,6 +53,15 @@ const createBiteshipOrder = async (orderData) => {
             },
         });
         console.log('Biteship Response:', response.data);
+        const updateOrder = await prisma_1.default.orders.update({
+            where: { id: orderData.id },
+            data: {
+                courier_tracking_id: response.data.courier?.tracking_id || null,
+                courier_waybill_id: response.data.courier?.waybill_id || null,
+                courier_link: response.data.courier?.link || null,
+            },
+        });
+        console.log('Order updated:', updateOrder);
         return response.data;
     }
     catch (error) {

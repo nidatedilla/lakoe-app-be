@@ -24,9 +24,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateStoreSellerController = exports.updateUserController = exports.deleteUserController = exports.getUsersController = void 0;
+const client_1 = require("@prisma/client");
+const store_repository_1 = require("../repositories/store.repository");
 const user_repository_1 = require("../repositories/user.repository");
 const userService = __importStar(require("../services/user.service"));
-const store_repository_1 = require("../repositories/store.repository");
 const getUsersController = async (req, res) => {
     try {
         const getAllUser = await (0, user_repository_1.getUsersRepository)();
@@ -75,7 +76,6 @@ const updateUserController = async (req, res) => {
     }
 };
 exports.updateUserController = updateUserController;
-const client_1 = require("@prisma/client");
 const updateStoreSellerController = async (req, res) => {
     const id = res.locals.user.id;
     if (!id) {

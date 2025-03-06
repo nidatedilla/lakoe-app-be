@@ -13,4 +13,7 @@ productRouter.post('/', upload_file_1.default.single('attachments'), product_con
 productRouter.put('/:id', product_controller_1.updateProductController);
 productRouter.get('/status/:isActive', product_controller_1.getProductsByIsActiveController);
 productRouter.delete('/:id', product_controller_1.deleteProductController);
+// Endpoint baru untuk variant berdasarkan product
+productRouter.get('/:productId/variants', product_controller_1.getVariantsByProductIdController);
+productRouter.put('/:productId/variants/:variantId', product_controller_1.updateVariantController);
 exports.default = productRouter;

@@ -23,11 +23,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductsByIsActiveService = exports.deleteProductService = exports.updateProductService = exports.createProductService = exports.getProductByIdService = exports.getAllProductsService = void 0;
+exports.updateVariantService = exports.getVariantsByProductIdService = exports.getProductsByIsActiveService = exports.deleteProductService = exports.updateProductService = exports.createProductService = exports.getProductByIdService = exports.getAllProductsService = void 0;
 const productRepository = __importStar(require("../repositories/product.repository"));
 const media_service_1 = require("./media.service");
-const getAllProductsService = async () => {
-    return await productRepository.findAllProductRepository();
+const prisma_1 = require("../libs/prisma");
+const getAllProductsService = async (userId) => {
+    return await productRepository.findAllProductRepository(userId);
 };
 exports.getAllProductsService = getAllProductsService;
 const getProductByIdService = async (id) => {
@@ -60,3 +61,19 @@ const getProductsByIsActiveService = async (isActive) => {
     return await productRepository.findProductsByIsActive(isActive);
 };
 exports.getProductsByIsActiveService = getProductsByIsActiveService;
+const getVariantsByProductIdService = async (productId) => {
+    const product = await prisma_1.prisma.products.findUnique({
+        where: { id: productId },
+        include: { variant: true },
+    });
+    if (!product) {
+        throw new Error('Product not found');
+    }
+    // Mengembalikan array variant saja
+    return product.variant;
+};
+exports.getVariantsByProductIdService = getVariantsByProductIdService;
+const updateVariantService = async (productId, variantId, updatedData) => {
+    return await productRepository.updateVariantRepository(productId, variantId, updatedData);
+};
+exports.updateVariantService = updateVariantService;

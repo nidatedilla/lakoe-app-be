@@ -75,7 +75,7 @@ const loginUser = async (LoginDTO) => {
     ;
     const isMatch = await bcrypt_1.default.compare(password, user.password);
     if (!isMatch) {
-        throw new Error('password is incorrect');
+        throw new Error('Email or password is incorrect');
     }
     const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET);
     return {

@@ -24,6 +24,11 @@ const createOrder = async (orderData, userId) => {
         user = await (0, exports.createGuestUser)(orderData.destination_contact_name);
         userId = user.id;
     }
+    let totalPrice = 0;
+    const store = await prisma_1.default.stores.findUnique({
+        where: { id: orderData.storeId },
+        include: { user: true, locations: true },
+    });
     const orderItemsData = await Promise.all(orderData.order_items.map(async (item) => {
         const product = await prisma_1.default.products.findUnique({
             where: { id: item.productId },
@@ -37,17 +42,32 @@ const createOrder = async (orderData, userId) => {
                         category: true,
                     },
                 },
+                variant: {
+                    select: {
+                        id: true,
+                        combination: true,
+                        price: true,
+                        weight: true,
+                    },
+                },
             },
         });
         if (!product) {
             throw new Error(`Product with ID ${item.productId} not found`);
         }
+        const variant = product.variant[0];
+        const itemPrice = variant?.price ?? product.price;
+        const itemWeight = variant?.weight ?? product.weight;
+        const variantName = variant?.combination ?? null;
+        const itemTotalPrice = itemPrice * item.qty;
+        totalPrice += itemTotalPrice;
         return {
             productId: item.productId,
-            variantOptionValueId: item.variantOptionValueId ?? null,
+            variantOptionValueId: variant?.id ?? null,
+            variantName: variantName,
             qty: item.qty,
-            price: product.price,
-            weight: product.weight,
+            price: itemPrice,
+            weight: itemWeight,
             name: product.name,
             description: product.description,
             categories: product.categories,
@@ -56,68 +76,31 @@ const createOrder = async (orderData, userId) => {
             width: item.width ?? null,
         };
     }));
-    // const courier = await prisma.couriers.findUnique({
-    //   where: { id: orderData.courierId },
-    //   select: {
-    //     courier_company: true,
-    //     courier_type: true,
-    //     courier_insurance: true,
-    //     delivery_type: true,
-    //   },
-    // });
-    // if (!courier) {
-    //   throw new Error(`Courier with ID ${orderData.courierId} not found`);
-    // }
-    const invoice = await prisma_1.default.invoices.create({
-        data: {
-            id: (0, uuid_1.v4)(),
-            prices: orderData.total_price || 0,
-            service_charge: orderData.service_charge ?? 0,
-            status: 'Belum Dibayar',
-            reciver_longitude: orderData.receiver_longitude ?? null,
-            receiver_latitude: orderData.receiver_latitude ?? null,
-            receiver_district: orderData.receiver_district ?? null,
-            receiver_phone: orderData.destination_contact_phone
-                ? parseInt(orderData.destination_contact_phone)
-                : null,
-            receiver_address: orderData.destination_address ?? null,
-            receiver_name: orderData.destination_contact_name ?? null,
-            invoice_number: `INV-${Date.now()}`,
-            cartId: orderData.cartId ?? null,
-            paymentId: orderData.paymentId,
-            courierId: orderData.courierId,
-            userId: userId,
-        },
+    const existingCourier = await prisma_1.default.couriers.findUnique({
+        where: { id: orderData.courierId },
     });
+    if (!existingCourier) {
+        throw new Error(`Courier with ID ${orderData.courierId} not found`);
+    }
     const order = await prisma_1.default.orders.create({
         data: {
             order_number: `ORD-${Date.now()}`,
             userId: userId || null,
             storeId: orderData.storeId,
-            invoicesId: invoice.id,
-            total_price: orderData.total_price || 0,
-            discount: orderData.discount ?? null,
-            status: 'Pesanan Baru',
+            total_price: totalPrice,
+            status: 'Belum Dibayar',
             payment_status: 'Belum Dibayar',
             payment_method: orderData.payment_method ?? null,
-            shipper_contact_name: orderData.shipper_contact_name || '',
-            shipper_contact_phone: orderData.shipper_contact_phone || '',
-            shipper_contact_email: orderData.shipper_contact_email || '',
-            shipper_organization: orderData.shipper_organization || '',
-            origin_contact_name: orderData.origin_contact_name || '',
-            origin_contact_phone: orderData.origin_contact_phone || '',
-            origin_contact_email: orderData.origin_contact_email || '',
-            origin_address: orderData.origin_address || '',
-            origin_note: orderData.origin_note || '',
-            origin_postal_code: String(orderData.origin_postal_code) || '',
+            origin_contact_name: store?.user.name || '',
+            origin_contact_phone: store?.user.phone || '',
+            origin_address: store?.locations[0]?.address || '',
+            origin_postal_code: String(store?.locations[0]?.postal_code) || '',
             destination_contact_name: orderData.destination_contact_name || '',
             destination_contact_phone: orderData.destination_contact_phone || '',
-            destination_contact_email: orderData.destination_contact_email || '',
             destination_address: orderData.destination_address || '',
-            destination_note: orderData.destination_note || '',
             destination_postal_code: String(orderData.destination_postal_code) || '',
             courierId: orderData.courierId,
-            order_note: orderData.order_note,
+            rate_courier: orderData.rate_courier,
             created_at: new Date(),
             updated_at: new Date(),
             order_items: {
@@ -149,8 +132,8 @@ const createOrder = async (orderData, userId) => {
                     variant: true,
                 },
             },
+            store: true,
             courier: true,
-            invoices: true,
         },
     });
     return order;
@@ -161,7 +144,7 @@ const updateOrderWithTracking = async (orderId, trackingNumber) => {
         where: { id: orderId },
         data: {
             tracking_number: trackingNumber,
-            status: 'processed',
+            status: 'Pesanan Baru',
         },
     });
 };
@@ -175,6 +158,7 @@ const getOrdersByStoreId = async (storeId) => {
                     product: true,
                 },
             },
+            store: true,
             user: true,
             courier: true,
             invoices: true,
@@ -220,7 +204,7 @@ const getOrderById = async (orderId) => {
 exports.getOrderById = getOrderById;
 const getSellerAreaId = async (storeId) => {
     const location = await prisma_1.default.locations.findFirst({
-        where: { storeId },
+        where: { storeId, is_main_location: true },
         select: { area_id: true },
     });
     return location || null;

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStoreDomainByUserId = exports.fetchStoreWithProducts = exports.deleteStoreService = exports.updateStoreService = exports.findUniqueStoreService = exports.getStoreService = void 0;
+exports.getStoreLogoByDomain = exports.getStoreDomainByUserId = exports.fetchStoreWithProducts = exports.deleteStoreService = exports.updateStoreService = exports.findUniqueStoreService = exports.getStoreService = void 0;
 const storeRepository = __importStar(require("../repositories/store.repository"));
 const getStoreService = async () => {
     return await storeRepository.getStoreRepository();
@@ -52,3 +52,7 @@ const getStoreDomainByUserId = async (userId) => {
     return await storeRepository.getStoreDomainByUserIdRepo(userId);
 };
 exports.getStoreDomainByUserId = getStoreDomainByUserId;
+const getStoreLogoByDomain = async (domain) => {
+    return await storeRepository.getStoreLogoByDomainRepo(domain);
+};
+exports.getStoreLogoByDomain = getStoreLogoByDomain;

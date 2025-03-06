@@ -9,11 +9,11 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
     console.log('Webhook received:', req.body);
 
     if (!req.body || Object.keys(req.body).length === 0) {
-       res
+      res
         .status(200)
         .json({ success: true, message: 'Webhook installed successfully' });
-    return
-      }
+      return;
+    }
 
     const {
       order_id,
@@ -24,9 +24,8 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
     } = req.body;
 
     if (!order_id || !status) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Invalid payload' });
+      res.status(400).json({ success: false, message: 'Invalid payload' });
+      return;
     }
 
     const order = await prisma.orders.findFirst({
@@ -35,9 +34,8 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
 
     if (!order) {
       console.warn('Order not found:', order_id);
-      return res
-        .status(200)
-        .json({ success: false, message: 'Order not found' });
+      res.status(200).json({ success: false, message: 'Order not found' });
+      return;
     }
 
     let orderStatus = '';
@@ -71,14 +69,12 @@ export const biteshipWebhook = async (req: Request, res: Response) => {
     });
 
     console.log('Order updated:', { order_id, status: orderStatus });
-    return res
-      .status(200)
-      .json({ success: true, message: 'Order status updated' });
+    res.status(200).json({ success: true, message: 'Order status updated' });
+    return;
   } catch (error: any) {
     console.error('Webhook error:', error.message);
-    return res
-      .status(500)
-      .json({ success: false, message: 'Internal Server Error' });
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    return;
   }
 };
 
@@ -92,9 +88,10 @@ export const midtransWebhook = async (req: Request, res: Response) => {
       req.body;
 
     if (!transaction_status || !order_id) {
-      return res
+      res
         .status(400)
         .json({ message: 'Invalid request: Missing required parameters' });
+      return;
     }
 
     if (transaction_status === 'settlement') {
@@ -116,7 +113,8 @@ export const midtransWebhook = async (req: Request, res: Response) => {
       });
 
       if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
+        res.status(404).json({ message: 'Order not found' });
+        return;
       }
 
       const payment = await prisma.payments.create({
@@ -203,10 +201,10 @@ export const midtransWebhookTest = async (req: Request, res: Response) => {
     console.log('Signature Key:', notification.signature_key);
     console.log('===============================');
 
-     res.status(200).json({ success: true, message: 'Webhook received' });
+    res.status(200).json({ success: true, message: 'Webhook received' });
   } catch (error) {
     console.error('Webhook Error:', error);
-     res.status(500).json({ error: 'Failed to process webhook' });
-     return
+    res.status(500).json({ error: 'Failed to process webhook' });
+    return;
   }
 };

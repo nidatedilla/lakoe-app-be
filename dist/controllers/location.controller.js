@@ -26,11 +26,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGuestLocation = exports.createBuyerLocation = exports.deleteLocationController = exports.updateLocationController = exports.getUniqueLocationController = exports.createLocationController = exports.getAllLocationController = void 0;
+exports.getGuestLocation = exports.createBuyerLocation = exports.deleteLocationController = exports.updateLocationController = exports.updateIsMainLocation = exports.getUniqueLocationController = exports.createLocationController = exports.getAllLocationController = void 0;
 const axios_1 = __importDefault(require("axios"));
 const locationRepository = __importStar(require("../repositories/location.repository"));
 const storeRepository = __importStar(require("../repositories/store.repository"));
 const area_repository_1 = require("../repositories/area.repository");
+const user_repository_1 = require("../repositories/user.repository");
 const BITESHIP_API_KEY = process.env.BITESHIP_API_KEY;
 const BITESHIP_API_URL = 'https://api.biteship.com/v1/locations';
 const axiosInstance = axios_1.default.create({
@@ -52,21 +53,23 @@ const getAllLocationController = async (req, res) => {
 };
 exports.getAllLocationController = getAllLocationController;
 const createLocationController = async (req, res) => {
-    const userId = res.locals.user.id;
     const { name, address, postal_code, city_district, latitude, provinces, regencies, districts, villages, longitude, is_main_location, storeId, profileId, type, guestId, } = req.body;
     try {
         const findUniqueStore = await storeRepository.findUniqueStoreLocationRepository(storeId);
         if (!findUniqueStore) {
-            res.status(400).json({ message: 'Store  does not exist!' });
+            res.status(400).json({ message: 'Store does not exist!' });
             return;
         }
         const numPhone = findUniqueStore.user.phone;
         const nameContact = findUniqueStore.user.name;
+        const existingLocations = findUniqueStore.locations;
+        const isFirstLocation = existingLocations.length === 0;
         const areaSearchResult = await (0, area_repository_1.searchAreasFromBiteship)(postal_code.toString(), 'single');
         if (!areaSearchResult || !areaSearchResult.areas?.length) {
-            return res
+            res
                 .status(400)
                 .json({ message: 'Area ID not found for given postal code' });
+            return;
         }
         const area_id = areaSearchResult.areas[0].id;
         console.log('Creating location with data:', {
@@ -80,7 +83,7 @@ const createLocationController = async (req, res) => {
             villages,
             latitude: latitude.toString(),
             longitude: longitude.toString(),
-            is_main_location,
+            is_main_location: isFirstLocation ? true : is_main_location,
             storeId,
             profileId,
             contact_name: nameContact,
@@ -89,14 +92,13 @@ const createLocationController = async (req, res) => {
             area_id,
             guestId,
         });
-        const isExsitingLocation = findUniqueStore.locations;
         const response = await axiosInstance.post('/', {
             name,
             address,
             postal_code,
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            is_main_location: isExsitingLocation ? false : true,
+            is_main_location: isFirstLocation ? true : false,
             contact_name: nameContact,
             contact_phone: numPhone,
             type,
@@ -113,7 +115,7 @@ const createLocationController = async (req, res) => {
             villages,
             latitude: latitude.toString(),
             longitude: longitude.toString(),
-            is_main_location: isExsitingLocation ? false : true,
+            is_main_location: isFirstLocation ? true : is_main_location,
             storeId,
             profileId,
             contact_name: nameContact,
@@ -143,6 +145,34 @@ const getUniqueLocationController = async (req, res) => {
     }
 };
 exports.getUniqueLocationController = getUniqueLocationController;
+const updateIsMainLocation = async (req, res) => {
+    const { id } = req.params;
+    const userId = res.locals.user.id;
+    const { is_main_location } = req.body;
+    console.log('userID', userId);
+    try {
+        if (!userId) {
+            res.status(400).json({ message: 'user id is undefined' });
+            return;
+        }
+        const updateLocationToFalse = await (0, user_repository_1.getMeRepository)(userId);
+        const storeId = updateLocationToFalse?.stores?.id;
+        if (!storeId) {
+            res.status(400).json({ message: 'Store id is undefined' });
+            return;
+        }
+        if (is_main_location) {
+            await locationRepository.updateManyMainLocation(storeId);
+        }
+        const updateMainLocation = await locationRepository.updateIsmainLocation(id, is_main_location);
+        res.status(201).json(updateMainLocation);
+    }
+    catch (error) {
+        console.error('Error fetching location:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.updateIsMainLocation = updateIsMainLocation;
 const updateLocationController = async (req, res) => {
     const { id } = req.params;
     const { name, address, postal_code, provinces, regencies, districts, villages, latitude, longitude, is_main_location, storeId, profileId, contact_name, contact_phone, type, guestId, } = req.body;
@@ -161,26 +191,22 @@ const updateLocationController = async (req, res) => {
             guestId,
         });
         const city_district = `${provinces}, ${regencies}, ${districts}, ${villages}`;
+        const existingLocation = await locationRepository.findUniqueLoactionById(id);
+        if (!existingLocation) {
+            res.status(404).json({ message: 'Location not found' });
+            return;
+        }
+        const updatedMainLocation = existingLocation.is_main_location
+            ? true
+            : is_main_location;
         const areaSearchResult = await (0, area_repository_1.searchAreasFromBiteship)(postal_code, 'single');
         if (!areaSearchResult || !areaSearchResult.areas?.length) {
-            return res
+            res
                 .status(400)
                 .json({ message: 'Area ID not found for given postal code' });
+            return;
         }
         const area_id = areaSearchResult.areas[0].id;
-        // const response = await axiosInstance.patch(`/${id}`, {
-        //   name,
-        //   address,
-        //   postal_code,
-        //   city_district,
-        //   latitude: parseFloat(latitude),
-        //   longitude: parseFloat(longitude),
-        //   is_main_location,
-        //   contact_name,
-        //   contact_phone,
-        //   type,
-        // });
-        // console.log('Biteship response:', response.data);
         const location = await locationRepository.updateLocationRepository({
             id,
             name,
@@ -192,7 +218,7 @@ const updateLocationController = async (req, res) => {
             villages,
             latitude: latitude.toString(),
             longitude: longitude.toString(),
-            is_main_location,
+            is_main_location: updatedMainLocation,
             storeId,
             profileId,
             contact_name,
@@ -248,9 +274,10 @@ const createBuyerLocation = async (req, res) => {
         });
         const areaSearchResult = await (0, area_repository_1.searchAreasFromBiteship)(postal_code.toString(), 'single');
         if (!areaSearchResult || !areaSearchResult.areas?.length) {
-            return res
+            res
                 .status(400)
                 .json({ message: 'Area ID not found for given postal code' });
+            return;
         }
         const area_id = areaSearchResult.areas[0].id;
         const response = await axiosInstance.post('/', {
@@ -259,7 +286,7 @@ const createBuyerLocation = async (req, res) => {
             postal_code,
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            is_main_location: true,
+            is_main_location: is_main_location,
             contact_name,
             contact_phone,
             type,

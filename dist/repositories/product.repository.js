@@ -3,12 +3,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findProductByName = exports.findProductsByIsActive = exports.deleteProductRepository = exports.updateProductRepository = exports.createProductRepository = exports.findUniqueProductRepository = exports.findAllProductRepository = void 0;
+exports.updateVariantRepository = exports.findProductByName = exports.findProductsByIsActive = exports.deleteProductRepository = exports.updateProductRepository = exports.createProductRepository = exports.findUniqueProductRepository = exports.findAllProductRepository = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
-const findAllProductRepository = async () => {
+const findAllProductRepository = async (userId) => {
+    const store = await prisma_1.default.stores.findFirst({
+        where: { userId },
+    });
+    if (!store) {
+        return [];
+    }
     return await prisma_1.default.products.findMany({
+        where: {
+            storeId: store.id,
+        },
         include: {
-            stores: true,
             categories: true,
         },
     });
@@ -78,3 +86,16 @@ const findProductByName = async (name) => {
     });
 };
 exports.findProductByName = findProductByName;
+const updateVariantRepository = async (productId, variantId, updatedData) => {
+    return await prisma_1.default.variants.update({
+        where: {
+            id: variantId,
+            productId: productId,
+        },
+        data: {
+            price: updatedData.price,
+            stock: updatedData.stock,
+        },
+    });
+};
+exports.updateVariantRepository = updateVariantRepository;

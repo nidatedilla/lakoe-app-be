@@ -7,7 +7,8 @@ export const getProductController = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
 
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
     }
 
     const userProducts = await productService.getAllProductsService(userId);

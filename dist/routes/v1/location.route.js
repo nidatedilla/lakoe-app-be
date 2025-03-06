@@ -25,6 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const locationController = __importStar(require("../../controllers/location.controller"));
+const auth_middlewere_1 = require("../../middlewares/auth.middlewere");
 const locationRouter = (0, express_1.Router)();
 locationRouter.get("/", locationController.getAllLocationController);
 locationRouter.get("/:id", locationController.getUniqueLocationController);
@@ -33,4 +34,5 @@ locationRouter.patch("/:id", locationController.updateLocationController);
 locationRouter.delete("/:id", locationController.deleteLocationController);
 locationRouter.post("/user", locationController.createBuyerLocation);
 locationRouter.get("/guest-locations/:guestId", locationController.getGuestLocation);
+locationRouter.patch("/main-location/:id", auth_middlewere_1.auth, locationController.updateIsMainLocation);
 exports.default = locationRouter;

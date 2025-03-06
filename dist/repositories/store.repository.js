@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStoreDomainByUserIdRepo = exports.getStoreByDomain = exports.findUniqueStoreLocationRepository = exports.findUniqueStoreByIdRepository = exports.uniqueStoreByName = exports.deleteStoreRepository = exports.updateStoreRepository = exports.findUniqueStoreRepository = exports.getStoreRepository = void 0;
+exports.getStoreLogoByDomainRepo = exports.getStoreDomainByUserIdRepo = exports.getStoreByDomain = exports.findUniqueStoreLocationRepository = exports.findUniqueStoreByIdRepository = exports.uniqueStoreByName = exports.deleteStoreRepository = exports.updateStoreRepository = exports.findUniqueStoreRepository = exports.getStoreRepository = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const getStoreRepository = async () => {
     return await prisma_1.default.stores.findMany({
@@ -68,7 +68,11 @@ exports.findUniqueStoreLocationRepository = findUniqueStoreLocationRepository;
 const getStoreByDomain = async (domain) => {
     return await prisma_1.default.stores.findUnique({
         where: { domain },
-        include: { products: true },
+        include: {
+            products: { include: { variant: true } },
+            user: true,
+            locations: true,
+        },
     });
 };
 exports.getStoreByDomain = getStoreByDomain;
@@ -79,3 +83,10 @@ const getStoreDomainByUserIdRepo = async (userId) => {
     });
 };
 exports.getStoreDomainByUserIdRepo = getStoreDomainByUserIdRepo;
+const getStoreLogoByDomainRepo = async (domain) => {
+    return prisma_1.default.stores.findUnique({
+        where: { domain },
+        select: { logo: true },
+    });
+};
+exports.getStoreLogoByDomainRepo = getStoreLogoByDomainRepo;

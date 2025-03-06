@@ -20,6 +20,7 @@ const registerUserRepository = async (user) => {
             email: user.email,
             password: user.password,
             name: user.name,
+            balance: user.balance,
             phone: user.phone,
             role: user.role || 'Seller',
         },
@@ -27,16 +28,28 @@ const registerUserRepository = async (user) => {
 };
 exports.registerUserRepository = registerUserRepository;
 const updateStoreSellerRepository = async (user) => {
-    const newDomain = user.stores?.name
-        ? await (0, domain_1.generateUniqueDomain)(user.stores.name)
-        : '';
+    const existingUser = await prisma_1.default.users.findUnique({
+        where: { id: user.id, role: 'Seller' },
+        include: { stores: true },
+    });
+    if (!existingUser) {
+        throw new Error('User not found');
+    }
+    const existingStore = existingUser.stores;
+    const newStoreName = user.stores?.name || '';
+    const isNameChanged = existingStore
+        ? existingStore.name !== newStoreName
+        : true;
+    const newDomain = isNameChanged
+        ? await (0, domain_1.generateUniqueDomain)(newStoreName)
+        : existingStore?.domain;
     return await prisma_1.default.users.update({
         where: { id: user.id, role: 'Seller' },
         data: {
             stores: {
                 upsert: {
                     create: {
-                        name: user.stores?.name || '',
+                        name: newStoreName,
                         description: user.stores?.description || '',
                         banner: user.stores?.banner,
                         logo: user.stores?.logo,
@@ -44,12 +57,12 @@ const updateStoreSellerRepository = async (user) => {
                         domain: newDomain,
                     },
                     update: {
-                        name: user.stores?.name || '',
+                        name: newStoreName,
                         description: user.stores?.description || '',
                         banner: user.stores?.banner,
                         logo: user.stores?.logo,
                         slogan: user.stores?.slogan,
-                        domain: newDomain,
+                        ...(isNameChanged && { domain: newDomain }),
                     },
                 },
             },
@@ -116,6 +129,7 @@ const getUniqueUserByIdRepository = async (id) => {
         where: { id },
         include: {
             stores: true,
+            bank_accounts: true
         },
     });
 };
@@ -128,6 +142,7 @@ const getMeRepository = async (id) => {
             email: true,
             role: true,
             name: true,
+            balance: true,
             phone: true,
             profile: true,
             stores: {
@@ -141,7 +156,12 @@ const getMeRepository = async (id) => {
                     slogan: true,
                     userId: true,
                     products: true,
-                    locations: true,
+                    locations: {
+                        orderBy: {
+                            is_main_location: "desc"
+                        }
+                    },
+                    bank_accounts: true,
                     _count: {
                         select: {
                             products: true,

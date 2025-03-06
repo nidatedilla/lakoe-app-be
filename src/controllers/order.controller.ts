@@ -178,7 +178,8 @@ export const getOrderById = async (req: Request, res: Response) => {
     });
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      res.status(404).json({ message: 'Order not found' });
+      return;
     }
 
     res.json(order);
@@ -196,9 +197,8 @@ export const getTotalRevenueByStoreHandler = async (
     const userId = res.locals.user.id;
 
     if (!userId) {
-      return res
-        .status(401)
-        .json({ error: 'Unauthorized, please login first' });
+      res.status(401).json({ error: 'Unauthorized, please login first' });
+      return;
     }
 
     const newRevenue = await getNewRevenueByStore(userId);
@@ -226,7 +226,8 @@ export const getTotalOrdersTodayByStoreHandler = async (
     const userId = res.locals.user.id;
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized, store not found' });
+      res.status(401).json({ error: 'Unauthorized, store not found' });
+      return;
     }
 
     const totalOrdersToday = await getTotalOrdersTodayByStore(userId);

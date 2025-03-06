@@ -6,10 +6,11 @@ const searchAreasByInput = async (req, res) => {
     try {
         const { input, type = 'single' } = req.query;
         if (!input || typeof input !== 'string') {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: 'Search input is required',
             });
+            return;
         }
         const areas = await (0, area_service_1.searchAreas)(input, type);
         res.status(200).json({

@@ -23,16 +23,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductsByIsActiveController = exports.deleteProductController = exports.updateProductController = exports.createProductController = exports.getProductByIdController = exports.getProductController = void 0;
+exports.updateVariantController = exports.getVariantsByProductIdController = exports.getProductsByIsActiveController = exports.deleteProductController = exports.updateProductController = exports.createProductController = exports.getProductByIdController = exports.getProductController = void 0;
 const productService = __importStar(require("../services/product.service"));
 const user_repository_1 = require("../repositories/user.repository");
 const getProductController = async (req, res) => {
     try {
-        const getAllProduct = await productService.getAllProductsService();
-        res.status(200).json(getAllProduct);
+        const userId = res.locals.user.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const userProducts = await productService.getAllProductsService(userId);
+        res.status(200).json(userProducts);
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
@@ -46,7 +51,7 @@ const getProductByIdController = async (req, res) => {
         res.status(200).json(product);
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
@@ -56,7 +61,9 @@ exports.getProductByIdController = getProductByIdController;
 const createProductController = async (req, res) => {
     const userId = res.locals.user.id;
     try {
-        let { name, description, size, minimum_order, url, stock, price, weight, attachments, categoryId, sku, variant, } = req.body;
+        let { name, description, minimum_order, url, stock, price, weight, attachments, // Dikirim sebagai JSON string (array foto)
+        categoryId, sku, variant, length, // Dimensi produk
+        width, height, } = req.body;
         const file = req.file;
         const findUniqueUserById = await (0, user_repository_1.getUniqueUserByIdRepository)(userId);
         if (!findUniqueUserById) {
@@ -68,7 +75,7 @@ const createProductController = async (req, res) => {
             return;
         }
         const storeId = findUniqueUserById.stores?.id || '';
-        // Parsing data variant yang dikirim dari frontend (bisa berupa string JSON)
+        // Parsing data variant (bisa berupa string JSON atau objek)
         let variantData = [];
         if (variant) {
             if (typeof variant === 'string') {
@@ -78,24 +85,30 @@ const createProductController = async (req, res) => {
                 variantData = variant;
             }
         }
-        // Pastikan data varian hanya memiliki field yang didefinisikan di model variants.
-        // Misalnya, jika ada properti "name", kita hapus atau abaikan.
         const transformedVariantData = variantData.map((v) => ({
-            combination: v.combination, // Harus berupa objek atau JSON
+            combination: v.combination,
             price: parseInt(v.price, 10),
             sku: v.sku,
             stock: parseInt(v.stock, 10),
             weight: parseInt(v.weight, 10),
             photo: v.photo,
         }));
+        // Gabungkan dimensi produk ke dalam objek JSON untuk field "size"
+        const sizeJson = JSON.stringify({
+            length: parseInt(length, 10),
+            width: parseInt(width, 10),
+            height: parseInt(height, 10),
+        });
+        // Parsing attachments jika ada
+        const attachmentsParsed = attachments ? JSON.parse(attachments) : null;
         // Buat object product
         const product = {
             name,
             description,
             url,
-            size: parseInt(size, 10),
+            size: sizeJson,
             minimum_order: parseInt(minimum_order, 10),
-            attachments,
+            attachments: attachmentsParsed,
             storeId,
             sku,
             weight: parseInt(weight, 10),
@@ -111,7 +124,7 @@ const createProductController = async (req, res) => {
         res.status(201).json(newProduct);
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
@@ -141,7 +154,7 @@ const updateProductController = async (req, res) => {
         res.status(200).json(updatedProduct);
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
@@ -154,10 +167,10 @@ const deleteProductController = async (req, res) => {
         const deleteProduct = await productService.deleteProductService(id);
         res
             .status(204)
-            .json({ message: 'product deleted successfully', deleteProduct });
+            .json({ message: 'Product deleted successfully', deleteProduct });
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
@@ -171,10 +184,35 @@ const getProductsByIsActiveController = async (req, res) => {
         res.status(200).json(products);
     }
     catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({
             message: error.message,
         });
     }
 };
 exports.getProductsByIsActiveController = getProductsByIsActiveController;
+const getVariantsByProductIdController = async (req, res) => {
+    try {
+        const { productId } = req.params; // pastikan parameter route dinamakan productId
+        const variants = await productService.getVariantsByProductIdService(productId);
+        res.status(200).json(variants);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.getVariantsByProductIdController = getVariantsByProductIdController;
+const updateVariantController = async (req, res) => {
+    try {
+        const { productId, variantId } = req.params;
+        const { price, stock } = req.body;
+        const updatedVariant = await productService.updateVariantService(productId, variantId, { price, stock });
+        res.status(200).json(updatedVariant);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.updateVariantController = updateVariantController;
