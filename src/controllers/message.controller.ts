@@ -47,8 +47,8 @@ export async function sendMessage(req: Request, res: Response) {
       !productName ||
       !storeName
     ) {
-      res.status(400).json({ message: 'Missing required fields' });
-      return;
+       res.status(400).json({ message: 'Missing required fields' });
+       return
     }
 
     const template = await prisma.message_templates.findUnique({
@@ -61,8 +61,8 @@ export async function sendMessage(req: Request, res: Response) {
     }
 
     if (!template.content) {
-      res.status(400).json({ message: 'Template content is missing' });
-      return;
+       res.status(400).json({ message: 'Template content is missing' });
+       return
     }
 
     let messageContent = template.content
@@ -80,8 +80,8 @@ export async function sendMessage(req: Request, res: Response) {
     });
     return;
   } catch (error) {
-    res.status(500).json({ message: 'Error generating message', error });
-    return;
+     res.status(500).json({ message: 'Error generating message', error });
+     return
   }
 }
 

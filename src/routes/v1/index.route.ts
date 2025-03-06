@@ -12,6 +12,8 @@ import courierRouter from './courier.route';
 import locationRouter from './location.route';
 import regionRouter from './region.route';
 import areaRouter from './area.route';
+import reqPaymentRouter from './withdrawal.route';
+import bankRouter from './bank.route';
 
 const router = Router();
 
@@ -27,5 +29,7 @@ router.use('/location', locationRouter);
 router.use('/ai', aiRouter);
 router.use('/wilayah', regionRouter);
 router.use('/areas', areaRouter);
+router.use('/withdrawal', reqPaymentRouter);
+router.use('/bank',auth, bankRouter);
 
 export default router;

@@ -80,23 +80,40 @@ export const getStoreWithProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const getStoreDomain = async (req: Request, res: Response) => {
+export const getStoreDomain = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const userId = res.locals.user.id;
 
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
     }
 
     const store = await storeService.getStoreDomainByUserId(userId);
 
     if (!store) {
-      return res.status(404).json({ message: 'Shop not found' });
+      res.status(404).json({ message: 'Shop not found' });
+      return;
     }
 
     res.json({ domain: store.domain });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getLogoStore = async (req: Request, res: Response) => {
+  try {
+    const { domain } = req.params;
+
+    const storeLogo = await storeService.getStoreLogoByDomain(domain);
+    res.json(storeLogo);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };

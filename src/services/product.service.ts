@@ -1,9 +1,10 @@
 import { products } from '@prisma/client';
 import * as productRepository from '../repositories/product.repository';
 import { uploadToCloudinary } from './media.service';
+import { prisma } from '../libs/prisma';
 
-export const getAllProductsService = async () => {
-  return await productRepository.findAllProductRepository();
+export const getAllProductsService = async (userId: string) => {
+  return await productRepository.findAllProductRepository(userId);
 };
 
 export const getProductByIdService = async (id: string) => {
@@ -47,4 +48,29 @@ export const deleteProductService = async (id: string) => {
 
 export const getProductsByIsActiveService = async (isActive: boolean) => {
   return await productRepository.findProductsByIsActive(isActive);
+};
+
+export const getVariantsByProductIdService = async (productId: string) => {
+  const product = await prisma.products.findUnique({
+    where: { id: productId },
+    include: { variant: true },
+  });
+
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  // Mengembalikan array variant saja
+  return product.variant;
+};
+export const updateVariantService = async (
+  productId: string,
+  variantId: string,
+  updatedData: { price: number; stock: number },
+) => {
+  return await productRepository.updateVariantRepository(
+    productId,
+    variantId,
+    updatedData,
+  );
 };

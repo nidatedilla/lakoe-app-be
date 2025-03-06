@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const courier_controller_1 = require("../../controllers/courier.controller");
+const courierRouter = (0, express_1.Router)();
+courierRouter.get('/', courier_controller_1.getAllCouriers);
+courierRouter.patch('/:courierId', courier_controller_1.toggleCourierSelections);
+courierRouter.get('/selected', courier_controller_1.getSelectedCouriers);
+// courierRouter.get('/rates', getCourierRates);
+exports.default = courierRouter;
